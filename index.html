@@ -2,30 +2,1331 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#000000" />
-  <link rel="icon" type="image/png" href="./favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c0b0f" />
+  <meta name="description" content="spiderkaras — музыка, факты и где меня найти" />
+  <meta property="og:title" content="spiderkaras" />
+  <meta property="og:description" content="музыка, факты и где меня найти" />
+  <meta property="og:image" content="https://spiderkaras.fun/logo.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./logo.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="./favicon-48.png" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
   <title>spiderkaras</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet" />
+
   <style>
-    html, body { margin: 0; height: 100%; background: #000; color: #fff; }
-    body {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-align: center;
+    /* ---- Material 3 (Expressive) dark roles ---- */
+    :root {
+      color-scheme: dark;
+
+      --bg: #0c0b0f;
+      --sc-low: #1d1b20;
+      --sc: #211f26;
+      --sc-high: #2b2930;
+      --sc-highest: #36343b;
+      --on-surface: #e6e0e9;
+      --on-surface-var: #cac4d0;
+      --outline: #938f99;
+      --outline-var: #49454f;
+
+      --primary: #d0bcff;
+      --on-primary: #381e72;
+      --primary-c: #4f378b;
+      --on-primary-c: #eaddff;
+      --secondary-c: #4a4458;
+      --on-secondary-c: #e8def8;
+      --tertiary: #efb8c8;
+      --tertiary-c: #633b48;
+      --on-tertiary-c: #ffd8e4;
+
+      /* dynamic color — gets replaced by the album cover color */
+      --accent: var(--primary);
+
+      --r-xl: 28px;
+      --r-l: 20px;
+      --r-m: 16px;
+      --r-s: 12px;
+      --full: 999px;
+
+      --ease: cubic-bezier(.2, 0, 0, 1);
+      --ease-emph: cubic-bezier(.05, .7, .1, 1);
+      --spring: cubic-bezier(.34, 1.56, .64, 1);
+
+      --font: "Roboto Flex", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --mono: "Roboto Mono", ui-monospace, monospace;
     }
-    h1 { margin: 0; font-size: clamp(36px, 10vw, 64px); font-weight: 700; letter-spacing: -.02em; }
-    p { margin: 0; color: #888; font-size: 14px; letter-spacing: .2em; text-transform: lowercase; }
-    nav { display: flex; gap: 20px; }
-    a { color: #fff; opacity: .7; transition: opacity .2s; display: flex; }
-    a:hover, a:focus-visible { opacity: 1; }
-    svg { width: 32px; height: 32px; fill: currentColor; }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    [hidden] { display: none !important; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100svh;
+      font-family: var(--font);
+      color: var(--on-surface);
+      background:
+        radial-gradient(900px 600px at 50% -200px, rgba(208, 188, 255, .10), transparent 70%),
+        var(--bg);
+      overflow-x: hidden;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
+    ::selection { background: var(--primary); color: var(--on-primary); }
+
+    /* ---- antigravity particle field ---- */
+    #field { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 5; pointer-events: none; }
+
+    /* ---- layout ---- */
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 540px;
+      margin: 0 auto;
+      padding: max(14px, env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
+      display: grid;
+      gap: 12px;
+    }
+    @media (min-width: 940px) {
+      .page {
+        max-width: 1080px;
+        gap: 16px;
+        padding-top: 28px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas:
+          "bar     bar"
+          "profile music"
+          "profile facts"
+          "socials socials"
+          "chat    chat"
+          "foot    foot"
+          "secret  secret";
+      }
+      .appbar { grid-area: bar; }
+      .profile { grid-area: profile; }
+      .music { grid-area: music; }
+      .facts { grid-area: facts; }
+      .socials { grid-area: socials; }
+      .comments { grid-area: chat; }
+      .footer { grid-area: foot; }
+      .ask { grid-area: secret; }
+    }
+
+    /* ---- cards ---- */
+    .card {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      padding: 20px;
+      border-radius: var(--r-xl);
+      background: rgba(29, 27, 32, .86);
+      border: 1px solid rgba(255, 255, 255, .06);
+      backdrop-filter: blur(14px) saturate(130%);
+      -webkit-backdrop-filter: blur(14px) saturate(130%);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
+      transition: transform .5s var(--spring), border-color .3s var(--ease), border-radius .5s var(--spring);
+      animation: rise .9s var(--ease-emph) backwards;
+      animation-delay: calc(var(--i, 0) * 90ms);
+    }
+    /* spotlight that follows the cursor inside a card */
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 14%, transparent), transparent 62%);
+      opacity: 0;
+      transition: opacity .35s var(--ease);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .card:hover { border-color: rgba(255, 255, 255, .12); border-radius: 34px; }
+      .card:hover::before { opacity: 1; }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(28px) scale(.97); filter: blur(6px); }
+    }
+
+    .label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--on-surface-var);
+    }
+    .label .spacer { flex: 1; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 14px;
+      border-radius: var(--r-s);
+      border: 1px solid var(--outline-var);
+      color: var(--on-surface-var);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background .2s var(--ease), border-radius .4s var(--spring), transform .4s var(--spring);
+    }
+    .chip svg { width: 18px; height: 18px; fill: currentColor; flex: 0 0 auto; }
+    .chip b { font-family: var(--mono); font-weight: 500; color: var(--on-surface); font-variant-numeric: tabular-nums; }
+    .chip.tonal { border-color: transparent; background: var(--secondary-c); color: var(--on-secondary-c); }
+    a.chip:hover { border-radius: var(--full); transform: translateY(-1px); }
+
+    .icon-btn {
+      width: 40px; height: 40px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: var(--full);
+      background: var(--sc-highest);
+      color: var(--on-surface-var);
+      transition: background .2s var(--ease), color .2s var(--ease), transform .45s var(--spring), border-radius .45s var(--spring);
+    }
+    .icon-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .icon-btn:hover { background: var(--primary-c); color: var(--on-primary-c); border-radius: 12px; }
+    .icon-btn:active { transform: scale(.88); }
+
+    /* ---- app bar ---- */
+    .appbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 2px; animation: rise .8s var(--ease-emph) backwards; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -.02em; font-stretch: 115%; }
+    .brand img { width: 30px; height: 30px; border-radius: 9px; transition: transform .6s var(--spring); }
+    .brand:hover img { transform: rotate(-12deg) scale(1.1); }
+    .status { background: rgba(43, 41, 48, .8); border-color: rgba(255, 255, 255, .06); backdrop-filter: blur(10px); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #80848e; box-shadow: 0 0 0 4px rgba(128, 132, 142, .14); transition: background .3s, box-shadow .3s; }
+    [data-status="online"] .dot { background: #23a55a; box-shadow: 0 0 0 4px rgba(35, 165, 90, .16), 0 0 14px #23a55a; }
+    [data-status="idle"] .dot { background: #f0b232; box-shadow: 0 0 0 4px rgba(240, 178, 50, .16), 0 0 14px #f0b232; }
+    [data-status="dnd"] .dot { background: #f23f43; box-shadow: 0 0 0 4px rgba(242, 63, 67, .16), 0 0 14px #f23f43; }
+
+    /* ---- glitch / scramble text ---- */
+    .glitching { animation: jitter .16s steps(2) infinite; text-shadow: 2px 0 rgba(255, 46, 136, .75), -2px 0 rgba(0, 229, 255, .75); }
+    .gl { color: var(--tertiary); font-family: var(--mono); }
+    @keyframes jitter {
+      0% { transform: translate(0, 0); }
+      50% { transform: translate(1px, -1px) skewX(-4deg); }
+      100% { transform: translate(-1px, 1px); }
+    }
+
+    /* ---- profile ---- */
+    .profile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 14px;
+      padding: 34px 20px 26px;
+      background:
+        radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+        rgba(29, 27, 32, .86);
+      transition: transform .5s var(--spring), border-color .3s var(--ease), border-radius .5s var(--spring), background 1.2s var(--ease);
+    }
+    .avatar { position: relative; width: 148px; height: 148px; margin-bottom: 4px; }
+    .av-ring, .av-clip {
+      position: absolute;
+      clip-path: var(--cookie, circle(50%));
+      animation: spin 26s linear infinite;
+      transition: clip-path .7s var(--spring);
+    }
+    .av-ring { inset: 0; background: conic-gradient(from 0deg, var(--accent), var(--tertiary), #8ab4f8, var(--accent)); }
+    .av-clip { inset: 7px; background: var(--sc-high); }
+    .av-clip img { width: 100%; height: 100%; object-fit: cover; display: block; animation: spin 26s linear infinite reverse; transform-origin: 50% 50%; }
+    .avatar:hover .av-ring, .avatar:hover .av-clip { clip-path: var(--cookie-hover, circle(50%)); }
+    .av-deco { position: absolute; inset: -12%; width: 124%; height: 124%; pointer-events: none; }
+    .av-dot {
+      position: absolute;
+      right: 10px; bottom: 10px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 5px solid #1d1b20;
+      background: #80848e;
+      transition: background .3s;
+    }
+    .av-dot[data-status="online"] { background: #23a55a; }
+    .av-dot[data-status="idle"] { background: #f0b232; }
+    .av-dot[data-status="dnd"] { background: #f23f43; }
+    .bubble {
+      position: absolute;
+      left: calc(100% - 18px);
+      top: 2px;
+      width: max-content;
+      max-width: 200px;
+      padding: 8px 12px;
+      border-radius: 18px 18px 18px 4px;
+      background: var(--sc-highest);
+      color: var(--on-surface);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: left;
+      line-height: 1.3;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+      animation: pop .6s var(--spring) backwards;
+      overflow-wrap: anywhere;
+    }
+    .bubble img { width: 16px; height: 16px; vertical-align: -3px; margin-right: 4px; }
+    @media (max-width: 420px) {
+      .bubble { left: 50%; top: auto; bottom: -12px; transform: translate(-50%, 100%); border-radius: 18px; max-width: 240px; animation: none; }
+      .avatar:has(.bubble:not([hidden])) { margin-bottom: 44px; }
+    }
+    @keyframes pop { from { opacity: 0; transform: scale(.6) translateY(8px); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .nick-row { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; }
+    .nick {
+      margin: 0;
+      font-size: clamp(38px, 11vw, 60px);
+      line-height: 1;
+      font-weight: 900;
+      font-stretch: 112%;
+      letter-spacing: -.045em;
+      white-space: nowrap;
+      background: linear-gradient(100deg, #fff 10%, var(--on-primary-c) 45%, var(--tertiary) 90%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      transition: font-stretch .5s var(--spring), letter-spacing .5s var(--spring);
+    }
+    .nick.glitching { background: none; color: var(--on-surface); }
+    @media (hover: hover) and (pointer: fine) {
+      .nick:hover { font-stretch: 130%; letter-spacing: -.02em; }
+    }
+    #nickBtn:hover { transform: rotate(180deg); }
+    .handle { margin: -6px 0 0; color: var(--on-surface-var); font-family: var(--mono); font-size: 13px; }
+
+    .activity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 100%;
+      padding: 10px 16px 10px 10px;
+      border-radius: var(--r-l);
+      background: var(--sc-high);
+      text-align: left;
+      animation: pop .6s var(--spring) backwards;
+    }
+    .activity .ico { width: 40px; height: 40px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; background: var(--primary-c); font-size: 20px; }
+    .activity .txt { min-width: 0; }
+    .activity strong { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .activity span { display: block; font-size: 12px; color: var(--on-surface-var); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .activity b { font-family: var(--mono); font-weight: 500; color: var(--primary); }
+    .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+
+    /* ---- now playing ---- */
+    .music-bg {
+      position: absolute;
+      inset: -40%;
+      z-index: -2;
+      background-size: cover;
+      background-position: center;
+      filter: blur(60px) saturate(1.7);
+      opacity: 0;
+      transition: opacity 1s var(--ease);
+    }
+    .music.playing .music-bg { opacity: .32; }
+    .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+    .eq i { width: 3px; height: 100%; border-radius: 2px; background: var(--accent); transform: scaleY(.25); transform-origin: bottom; transition: background .6s; }
+    .music.playing .eq i { animation: eq .9s var(--ease) infinite; }
+    .eq i:nth-child(2) { animation-delay: -.3s !important; }
+    .eq i:nth-child(3) { animation-delay: -.6s !important; }
+    .eq i:nth-child(4) { animation-delay: -.15s !important; }
+    @keyframes eq { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+
+    .track { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; margin-top: 16px; }
+    .disc { position: relative; width: 124px; height: 96px; }
+    .vinyl-slot { position: absolute; left: 6px; top: 6px; width: 84px; height: 84px; transition: transform .8s var(--spring); }
+    .music.playing .vinyl-slot { transform: translateX(28px); }
+    .vinyl {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, var(--accent) 0 16%, #111 17% 19%, transparent 20%),
+        repeating-radial-gradient(circle, #141416 0 2px, #222226 2px 3px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .5);
+    }
+    .music.playing .vinyl { animation: spin 2.4s linear infinite; }
+    .cover {
+      position: absolute;
+      left: 0; top: 0;
+      width: 96px; height: 96px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: var(--r-l);
+      background: var(--sc-highest);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, .45);
+      transition: border-radius .6s var(--spring), transform .6s var(--spring);
+    }
+    .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cover svg { width: 40px; height: 40px; fill: var(--outline); }
+    .track:hover .cover { border-radius: 34px; transform: rotate(-4deg); }
+    .meta { min-width: 0; }
+    .meta h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      font-stretch: 105%;
+      letter-spacing: -.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .meta p { margin: 4px 0 0; font-size: 14px; color: var(--on-surface-var); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meta .album { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--outline); }
+    .meta .album svg { width: 14px; height: 14px; fill: currentColor; flex: 0 0 auto; }
+    .meta .album span { overflow: hidden; text-overflow: ellipsis; }
+    .swap { animation: swapIn .6s var(--ease-emph); }
+    @keyframes swapIn { from { opacity: 0; transform: translateY(10px); filter: blur(4px); } }
+
+    /* M3 expressive wavy progress */
+    .wbar { --p: 0; position: relative; height: 16px; margin-top: 20px; }
+    .wbar .fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--p) * 100%); overflow: hidden; transition: width 1s linear; }
+    .wbar .fill i {
+      position: absolute;
+      left: 0; top: 0;
+      width: 2400px; height: 100%;
+      background: var(--accent);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='16' viewBox='0 0 24 16'%3E%3Cpath d='M0 8Q6 2.5 12 8T24 8' fill='none' stroke='%23000' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E") 0 50% / 24px 16px repeat-x;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='16' viewBox='0 0 24 16'%3E%3Cpath d='M0 8Q6 2.5 12 8T24 8' fill='none' stroke='%23000' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E") 0 50% / 24px 16px repeat-x;
+      animation: wave 1.1s linear infinite;
+      transition: background .6s;
+    }
+    @keyframes wave { to { -webkit-mask-position: 24px 50%; mask-position: 24px 50%; } }
+    .wbar .rest {
+      position: absolute;
+      right: 0; top: 50%;
+      left: calc(var(--p) * 100% + 6px);
+      height: 4px;
+      margin-top: -2px;
+      border-radius: 4px;
+      background: var(--sc-highest);
+      transition: left 1s linear;
+    }
+    .wbar .rest::after { content: ""; position: absolute; right: 0; top: 0; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+    .wbar.jump .fill, .wbar.jump .rest { transition: none; }
+    .times { display: flex; justify-content: space-between; margin-top: 8px; font-family: var(--mono); font-size: 12px; color: var(--on-surface-var); font-variant-numeric: tabular-nums; }
+    .times .left { color: var(--outline); }
+
+    /* ---- facts ---- */
+    .fact-body { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 18px; align-items: start; margin: 18px 0 16px; min-height: 120px; cursor: pointer; }
+    .fact-shape { position: relative; width: 76px; height: 76px; display: grid; place-items: center; font-size: 34px; }
+    .fact-shape::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(from 0deg, var(--primary-c), var(--tertiary-c), #1f3a6b, var(--primary-c));
+      clip-path: var(--fact-shape, circle(50%));
+      transition: clip-path .9s var(--spring);
+      animation: spin 16s linear infinite;
+    }
+    .fact-shape span { position: relative; transition: transform .6s var(--spring); }
+    .fact-body:hover .fact-shape span { transform: scale(1.15) rotate(-8deg); }
+    .fact-text { margin: 0; font-size: 19px; line-height: 1.42; font-weight: 550; letter-spacing: -.01em; }
+    .w { display: inline-block; animation: wordIn .7s var(--ease-emph) backwards; }
+    @keyframes wordIn { from { opacity: 0; filter: blur(10px); transform: translateY(.6em) rotate(5deg) scale(.9); } }
+    .fact-text.out { transition: opacity .22s var(--ease), filter .22s var(--ease), transform .22s var(--ease); opacity: 0; filter: blur(8px); transform: translateY(-8px); }
+    .fact-foot { display: flex; align-items: center; gap: 12px; }
+    .fact-num { font-family: var(--mono); font-size: 13px; color: var(--on-surface-var); font-variant-numeric: tabular-nums; min-width: 64px; }
+    .fact-timer { flex: 1; height: 4px; border-radius: 4px; background: var(--sc-highest); overflow: hidden; }
+    .fact-timer i { display: block; height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--primary), var(--tertiary)); transform-origin: left; transform: scaleX(0); }
+    .fact-timer i.run { animation: timer 9s linear forwards; }
+    .facts:hover .fact-timer i.run { animation-play-state: paused; }
+    @keyframes timer { to { transform: scaleX(1); } }
+
+    /* ---- socials ---- */
+    .social-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+    .social {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 68px;
+      padding: 12px 14px;
+      border-radius: var(--r-l);
+      background: rgba(43, 41, 48, .7);
+      border: 1px solid rgba(255, 255, 255, .04);
+      transition: background .25s var(--ease), border-radius .5s var(--spring), transform .5s var(--spring);
+    }
+    .social:last-child { grid-column: span 2; }
+    .social i {
+      width: 44px; height: 44px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, var(--c) 24%, #2b2930);
+      color: color-mix(in srgb, var(--c) 55%, #fff);
+      clip-path: var(--circle, circle(50%));
+      transition: clip-path .6s var(--spring), transform .6s var(--spring), background .25s var(--ease), color .25s var(--ease);
+    }
+    .social i svg { width: 22px; height: 22px; fill: currentColor; }
+    .social strong { display: block; font-size: 16px; font-weight: 750; font-stretch: 108%; letter-spacing: -.01em; }
+    .social small { display: block; margin-top: 2px; font-family: var(--mono); font-size: 11px; color: var(--on-surface-var); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .social > span { min-width: 0; }
+    .social:hover { background: color-mix(in srgb, var(--c) 16%, #2b2930); border-radius: 30px; transform: translateY(-3px); }
+    .social:hover i { clip-path: var(--cookie-small, circle(50%)); transform: rotate(40deg); background: var(--c); color: #fff; }
+    .social:hover i svg { transform: rotate(-40deg); }
+    .social:active { transform: scale(.96); }
+    @media (min-width: 720px) {
+      .social-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .social:last-child { grid-column: auto; }
+      .social { flex-direction: column; align-items: flex-start; gap: 18px; min-height: 132px; padding: 16px; }
+    }
+
+    /* ---- comments ---- */
+    .comments-mount { min-height: 140px; margin-top: 14px; border-radius: var(--r-l); }
+    .comments-mount iframe { background: transparent !important; }
+    .muted { margin: 0; color: var(--on-surface-var); font-size: 13px; }
+
+    /* ---- footer ---- */
+    .footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 6px 0; color: var(--outline); font-size: 12px; font-family: var(--mono); }
+    .footer span:first-child { color: var(--on-surface-var); }
+
+    /* ---- the input at the very bottom ---- */
+    .ask { position: relative; margin-top: 96px; animation: rise .9s var(--ease-emph) backwards; animation-delay: .5s; }
+    .ask-out { position: absolute; left: 0; right: 0; bottom: 100%; display: flex; justify-content: center; padding: 0 12px 16px; pointer-events: none; }
+    .answer {
+      margin: 0;
+      max-width: 640px;
+      text-align: center;
+      font-size: 19px;
+      font-weight: 750;
+      line-height: 1.3;
+      letter-spacing: -.01em;
+      color: var(--on-surface-var);
+      animation: emerge .8s var(--ease-emph) both;
+    }
+    .answer.hit { color: var(--primary); font-size: 21px; }
+    @keyframes emerge {
+      from { opacity: 0; transform: translateY(58px) scale(.8); filter: blur(10px); }
+      60% { opacity: 1; }
+    }
+    .dust { position: fixed; z-index: 6; pointer-events: none; }
+    .ask-bar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 58px;
+      padding: 0 7px 0 18px;
+      border-radius: var(--full);
+      background: var(--sc-high);
+      border: 1px solid rgba(255, 255, 255, .06);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
+      transition: border-color .25s var(--ease), background .25s var(--ease), transform .5s var(--spring);
+    }
+    .ask-bar:focus-within { border-color: var(--primary); background: var(--sc-highest); }
+    .ask-bar > svg { width: 22px; height: 22px; fill: var(--primary); flex: 0 0 auto; transition: transform .6s var(--spring); }
+    .ask-bar:focus-within > svg { transform: rotate(90deg) scale(1.1); }
+    .ask-bar input {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--on-surface);
+      font: 500 16px var(--font);
+    }
+    .ask-bar input::placeholder { color: var(--outline); }
+    .send {
+      width: 44px; height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--full);
+      background: var(--primary);
+      color: var(--on-primary);
+      transition: transform .45s var(--spring), border-radius .45s var(--spring), opacity .2s;
+    }
+    .send svg { width: 20px; height: 20px; fill: currentColor; }
+    .send:hover { border-radius: 14px; transform: rotate(-12deg); }
+    .send:disabled { cursor: default; }
+    .busy .send { animation: spin .8s linear infinite; border-radius: 14px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
   </style>
 </head>
 <body>
-  <h1>spiderkaras</h1>
-  <p>to connect</p>
-  <nav>
-    <a href="https://discord.com/users/1407136994764525749" target="_blank" rel="noreferrer" aria-label="Discord"><svg viewBox="0 0 24 24"><path d="M20.32 4.37A19.79 19.79 0 0 0 15.37 2c-.22.39-.47.92-.64 1.34a18.27 18.27 0 0 0-5.46 0A13.5 13.5 0 0 0 8.63 2a19.74 19.74 0 0 0-4.95 2.38C.55 9.04-.3 13.59.12 18.08a19.9 19.9 0 0 0 6.07 3.07c.49-.67.92-1.38 1.29-2.13-.71-.27-1.38-.6-2.02-.97.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.1 0l.49.38c-.64.38-1.32.7-2.02.97.37.75.8 1.46 1.29 2.13a19.86 19.86 0 0 0 6.07-3.07c.5-5.2-.85-9.72-3.56-13.71ZM8.02 15.33c-1.18 0-2.15-1.08-2.15-2.41 0-1.33.95-2.42 2.15-2.42 1.2 0 2.17 1.1 2.15 2.42 0 1.33-.95 2.41-2.15 2.41Zm7.96 0c-1.18 0-2.15-1.08-2.15-2.41 0-1.33.95-2.42 2.15-2.42 1.2 0 2.17 1.1 2.15 2.42 0 1.33-.95 2.41-2.15 2.41Z"/></svg></a>
-    <a href="https://t.me/badtexting" target="_blank" rel="noreferrer" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.56 7.98-1.8 8.47c-.13.6-.49.75-.99.47l-2.74-2.02-1.32 1.27c-.15.15-.27.27-.55.27l.2-2.79 5.08-4.59c.22-.2-.05-.31-.34-.11l-6.28 3.95-2.7-.84c-.59-.18-.6-.59.12-.87l10.56-4.07c.49-.18.92.12.76.86Z"/></svg></a>
-  </nav>
+  <canvas id="field" aria-hidden="true"></canvas>
+
+  <main class="page">
+    <header class="appbar">
+      <a class="brand" href="#top"><img src="./logo.png" alt="" /><span id="brandNick">spiderkaras</span></a>
+      <div class="chip status" id="presence" data-status="offline"><span class="dot"></span><span id="presenceText">подключение…</span></div>
+    </header>
+
+    <section class="card profile" id="top" style="--i:1">
+      <div class="avatar">
+        <div class="av-ring"></div>
+        <div class="av-clip"><img id="avatar" alt="" /></div>
+        <img class="av-deco" id="avatarDeco" alt="" hidden />
+        <span class="av-dot" id="avatarDot"></span>
+        <div class="bubble" id="customStatus" hidden></div>
+      </div>
+
+      <div class="nick-row">
+        <h1 class="nick" id="nick">spiderkaras</h1>
+        <button class="icon-btn" id="nickBtn" type="button" aria-label="сменить ник">
+          <svg viewBox="0 0 24 24"><path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5a5 5 0 0 1-9.58 2H5.26A7 7 0 0 0 19 13c0-3.87-3.13-7-7-7Z"/></svg>
+        </button>
+      </div>
+      <p class="handle" id="handle">@spiderkaras</p>
+
+      <div class="activity" id="activity" hidden>
+        <div class="ico" id="actIcon">🎮</div>
+        <div class="txt"><strong id="actName"></strong><span id="actInfo"></span></div>
+      </div>
+
+      <div class="chips">
+        <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7Z"/></svg>МСК <b id="mskTime">--:--</b></span>
+        <a class="chip tonal" href="#socials">to connect ↓</a>
+      </div>
+    </section>
+
+    <section class="card music" id="music" style="--i:2">
+      <div class="music-bg" id="musicBg"></div>
+      <div class="label"><span class="eq"><i></i><i></i><i></i><i></i></span><span id="musicLabel">now playing</span></div>
+      <a class="track" id="trackLink" href="https://open.spotify.com/" target="_blank" rel="noreferrer">
+        <div class="disc">
+          <div class="vinyl-slot"><div class="vinyl"></div></div>
+          <div class="cover">
+            <img id="cover" alt="" hidden />
+            <svg id="coverPh" viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/></svg>
+          </div>
+        </div>
+        <div class="meta" id="meta">
+          <h2 id="trackTitle">тишина</h2>
+          <p id="trackArtist">ничего не играет</p>
+          <p class="album"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 14.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Zm0-5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg><span id="trackAlbum">—</span></p>
+        </div>
+      </a>
+      <div class="wbar" id="wbar"><div class="fill"><i></i></div><div class="rest"></div></div>
+      <div class="times"><span id="elapsed">0:00</span><span class="left" id="remain"></span><span id="duration">0:00</span></div>
+    </section>
+
+    <section class="card facts" id="facts" style="--i:3">
+      <div class="label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6L12 2Z"/></svg>
+        <span>интересный факт</span>
+      </div>
+      <div class="fact-body" id="factBody" title="ещё факт">
+        <div class="fact-shape"><span id="factEmoji">🕷</span></div>
+        <p class="fact-text" id="factText" aria-live="polite"></p>
+      </div>
+      <div class="fact-foot">
+        <span class="fact-num" id="factNum">01 / 01</span>
+        <div class="fact-timer"><i id="factTimer"></i></div>
+        <button class="icon-btn" id="factPrev" type="button" aria-label="предыдущий факт"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6 4.6-4.6Z"/></svg></button>
+        <button class="icon-btn" id="factNext" type="button" aria-label="следующий факт"><svg viewBox="0 0 24 24"><path d="M8.6 16.6 10 18l6-6-6-6-1.4 1.4 4.6 4.6-4.6 4.6Z"/></svg></button>
+      </div>
+    </section>
+
+    <section class="card socials" id="socials" style="--i:4">
+      <div class="label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l3.5-3.5a3 3 0 1 1 4.3 4.2l-2 2-1.4-1.4 2-2a1 1 0 0 0-1.5-1.4l-3.5 3.5a1 1 0 0 1-1.4 0Zm2.8-2.8a1 1 0 0 1 0 1.4l-3.5 3.5a3 3 0 1 1-4.3-4.2l2-2 1.4 1.4-2 2a1 1 0 0 0 1.5 1.4l3.5-3.5a1 1 0 0 1 1.4 0Z"/></svg>
+        <span>to connect</span>
+      </div>
+      <div class="social-grid">
+        <a class="social" data-social="steam" style="--c:#66c0f4" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11.98 0C5.68 0 .51 4.86.02 11.04l6.43 2.66a3.38 3.38 0 0 1 1.91-.59h.19l2.86-4.14v-.06a4.57 4.57 0 1 1 4.57 4.53h-.11l-4.07 2.9v.16a3.39 3.39 0 0 1-6.72.67L.44 15.27A12 12 0 1 0 11.98 0Zm-3.62 18.75a2.25 2.25 0 0 0 2.24-2.25 2.25 2.25 0 0 0-2.24-2.24c-.17 0-.33.02-.49.05l1.07.44a1.66 1.66 0 1 1-1.29 3.06l-1-.42a2.24 2.24 0 0 0 1.71 1.36Zm7.62-6.83a3.01 3.01 0 1 0 0-6.02 3.01 3.01 0 0 0 0 6.02Zm0-.75a2.26 2.26 0 1 1 0-4.52 2.26 2.26 0 0 1 0 4.52Z"/></svg></i><span><strong>Steam</strong><small>spiderkarasXD</small></span></a>
+        <a class="social" data-social="discord" style="--c:#5865f2" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.32 4.37A19.79 19.79 0 0 0 15.37 2c-.22.39-.47.92-.64 1.34a18.27 18.27 0 0 0-5.46 0A13.5 13.5 0 0 0 8.63 2a19.74 19.74 0 0 0-4.95 2.38C.55 9.04-.3 13.59.12 18.08a19.9 19.9 0 0 0 6.07 3.07c.49-.67.92-1.38 1.29-2.13-.71-.27-1.38-.6-2.02-.97.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.1 0l.49.38c-.64.38-1.32.7-2.02.97.37.75.8 1.46 1.29 2.13a19.86 19.86 0 0 0 6.07-3.07c.5-5.2-.85-9.72-3.56-13.71ZM8.02 15.33c-1.18 0-2.15-1.08-2.15-2.41 0-1.33.95-2.42 2.15-2.42 1.2 0 2.17 1.1 2.15 2.42 0 1.33-.95 2.41-2.15 2.41Zm7.96 0c-1.18 0-2.15-1.08-2.15-2.41 0-1.33.95-2.42 2.15-2.42 1.2 0 2.17 1.1 2.15 2.42 0 1.33-.95 2.41-2.15 2.41Z"/></svg></i><span><strong>Discord</strong><small id="discordHandle">профиль</small></span></a>
+        <a class="social" data-social="spotify" style="--c:#1db954" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.48.66.3 1.02Zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-1.02-.12-1.14-.6-.12-.48.12-1.02.6-1.14 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.24 1.2Zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-1.02.6-1.56.3Z"/></svg></i><span><strong>Spotify</strong><small>что я слушаю</small></span></a>
+        <a class="social" data-social="tiktok" style="--c:#ff2e88" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-2.08-2.77V9.4a6.34 6.34 0 1 0 5.53 6.29V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76c-.35 0-.68-.03-1.01-.07Z"/></svg></i><span><strong>TikTok</strong><small>@spiderkaras_</small></span></a>
+        <a class="social" data-social="telegram" style="--c:#29a9eb" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.56 7.98-1.8 8.47c-.13.6-.49.75-.99.47l-2.74-2.02-1.32 1.27c-.15.15-.27.27-.55.27l.2-2.79 5.08-4.59c.22-.2-.05-.31-.34-.11l-6.28 3.95-2.7-.84c-.59-.18-.6-.59.12-.87l10.56-4.07c.49-.18.92.12.76.86Z"/></svg></i><span><strong>Telegram</strong><small>@badtexting</small></span></a>
+      </div>
+    </section>
+
+    <section class="card comments" id="comments" style="--i:5">
+      <div class="label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2Z" transform="translate(-2 -1)"/></svg>
+        <span>чат</span>
+      </div>
+      <div class="comments-mount" id="commentsMount"><p class="muted">загрузка…</p></div>
+    </section>
+
+    <footer class="footer">
+      <span id="footNick">spiderkaras</span>
+      <span>spiderkaras.fun</span>
+    </footer>
+
+    <form class="ask" id="secretForm" autocomplete="off">
+      <div class="ask-out" id="secretOut" aria-live="polite"></div>
+      <div class="ask-bar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2Zm7 12 .9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14Z"/></svg>
+        <input id="secretInput" maxlength="80" placeholder="скажи что-нибудь…" aria-label="скажи что-нибудь" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" />
+        <button class="send" id="secretSend" type="submit" aria-label="отправить"><svg viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2v6.4Z"/></svg></button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    const PROFILE = {
+      nicknames: ["spiderkaras", "spiderkarasXD", "spidorkaras"],
+      discordId: "1407136994764525749",
+      socials: {
+        steam: "https://steamcommunity.com/id/spiderkarasXD/",
+        discord: "https://discord.com/users/1407136994764525749",
+        spotify: "https://open.spotify.com/",
+        tiktok: "https://www.tiktok.com/@spiderkaras_",
+        telegram: "https://t.me/badtexting"
+      }
+    };
+
+    const FACTS = [
+      ["🕷", "Паутина на разрыв прочнее стали того же веса — и при этом тянется в разы лучше."],
+      ["🐟", "Карась может пережить зиму почти без кислорода: в таком режиме он превращает молочную кислоту в спирт."],
+      ["🐠", "Золотая рыбка — одомашненный родственник карася. Буквально карась-мажор."],
+      ["🎈", "Маленькие пауки умеют летать: выпускают нити и поднимаются в воздух на ветре и электрическом поле Земли."],
+      ["🐙", "У осьминога три сердца и голубая кровь."],
+      ["🍌", "С точки зрения ботаники банан — ягода, а клубника — нет."],
+      ["🪐", "На Венере сутки длиннее года."],
+      ["🗼", "Летом Эйфелева башня становится выше примерно на 15 см — металл расширяется от жары."],
+      ["🧱", "LEGO — это сокращение от датского «leg godt», «играй хорошо»."],
+      ["☀️", "Свет от Солнца летит до Земли около 8 минут 20 секунд. Ты видишь Солнце из прошлого."],
+      ["🏛", "Оксфордский университет старше империи ацтеков."],
+      ["👑", "Клеопатра жила ближе ко времени высадки на Луну, чем к постройке пирамиды Хеопса."],
+      ["⚔️", "Самая короткая война в истории — англо-занзибарская. Она длилась меньше часа."],
+      ["🐨", "Отпечатки пальцев коалы настолько похожи на человеческие, что их трудно различить даже под микроскопом."],
+      ["🟫", "Вомбаты какают кубиками."],
+      ["🌐", "Первый в мире сайт до сих пор открывается: info.cern.ch."],
+      ["🎄", "Первая песня, сыгранная в космосе, — «Jingle Bells». В 1965 году, на губной гармошке."],
+      ["🌟", "Чайная ложка вещества нейтронной звезды весит миллиарды тонн."],
+      ["🦈", "Акулы старше деревьев: они плавали в океане ещё до появления первых лесов."],
+      ["🎮", "Discord сделала студия, которая до этого пилила мобильную MOBA Fates Forever."],
+      ["🪼", "Медуза Turritopsis dohrnii умеет откатываться обратно в молодую стадию — её называют бессмертной."],
+      ["🦩", "Фламинго розовые из-за еды: пигменты попадают к ним из водорослей и рачков."],
+      ["🤖", "Слово «робот» придумал чешский художник Йозеф Чапек для пьесы своего брата Карела."],
+      ["😢", "В космосе слёзы не стекают — они собираются в шарик прямо у глаза."]
+    ];
+
+    const $ = (s) => document.querySelector(s);
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    /* ---------- M3 expressive shapes (cookie / circle polygons that morph) ---------- */
+    function shape(n, k, points = 120) {
+      const out = [];
+      for (let i = 0; i < points; i++) {
+        const t = (i / points) * Math.PI * 2;
+        const r = 50 * (1 - k * (1 - Math.cos(n * t)) / 2);
+        out.push(`${(50 + r * Math.cos(t)).toFixed(2)}% ${(50 + r * Math.sin(t)).toFixed(2)}%`);
+      }
+      return `polygon(${out.join(",")})`;
+    }
+    const root = document.documentElement.style;
+    root.setProperty("--cookie", shape(12, .09));
+    root.setProperty("--cookie-hover", shape(7, .16));
+    root.setProperty("--circle", shape(1, 0));
+    root.setProperty("--cookie-small", shape(8, .2));
+
+    /* ---------- glitch scramble ---------- */
+    const GLYPHS = "!<>-_\\/[]{}=+*^?#%&@$01ЖЯЪ▓▒░";
+    function scramble(el, text, dur = 900) {
+      if (!el) return;
+      cancelAnimationFrame(el._scr || 0);
+      el.setAttribute("aria-label", text);
+      if (reduceMotion) { el.textContent = text; return; }
+      const from = el.textContent;
+      const len = Math.max(from.length, text.length);
+      const queue = Array.from({ length: len }, (_, i) => {
+        const start = Math.random() * dur * .35;
+        return { from: from[i] || "", to: text[i] || "", start, end: start + dur * .3 + Math.random() * dur * .35, ch: "" };
+      });
+      const t0 = performance.now();
+      el.classList.add("glitching");
+      const frame = (now) => {
+        const t = now - t0;
+        let html = "", done = 0;
+        for (const c of queue) {
+          if (t >= c.end) { html += esc(c.to); done++; }
+          else if (t >= c.start) {
+            if (!c.ch || Math.random() < .3) c.ch = GLYPHS[Math.random() * GLYPHS.length | 0];
+            html += `<span class="gl">${esc(c.ch)}</span>`;
+          } else html += esc(c.from);
+        }
+        el.innerHTML = html;
+        if (done === queue.length) { el.textContent = text; el.classList.remove("glitching"); return; }
+        el._scr = requestAnimationFrame(frame);
+      };
+      el._scr = requestAnimationFrame(frame);
+    }
+
+    /* ---------- nicknames ---------- */
+    const nickState = { i: 0, timer: 0 };
+    function setNick(i) {
+      const list = PROFILE.nicknames;
+      nickState.i = (i + list.length) % list.length;
+      const nick = list[nickState.i];
+      scramble($("#nick"), nick, 1000);
+      scramble($("#brandNick"), nick, 700);
+      scramble($("#footNick"), nick, 700);
+      if (!document.hidden) document.title = nick;
+    }
+    function nextNick() { setNick(nickState.i + 1); }
+    function startNickLoop() { clearInterval(nickState.timer); nickState.timer = setInterval(nextNick, 4200); }
+    $("#nickBtn").addEventListener("click", () => { nextNick(); startNickLoop(); });
+    startNickLoop();
+
+    document.addEventListener("visibilitychange", () => {
+      document.title = document.hidden ? "🕷 вернись…" : PROFILE.nicknames[nickState.i];
+    });
+
+    /* ---------- card spotlight ---------- */
+    document.querySelectorAll(".card").forEach((card) => {
+      card.addEventListener("pointermove", (e) => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        card.style.setProperty("--my", `${e.clientY - r.top}px`);
+      });
+    });
+
+    /* ---------- socials ---------- */
+    document.querySelectorAll("[data-social]").forEach((a) => { a.href = PROFILE.socials[a.dataset.social] || "#"; });
+
+    /* ---------- time ---------- */
+    function fmt(ms) {
+      const s = Math.max(0, Math.floor(ms / 1000));
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = String(s % 60).padStart(2, "0");
+      return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+    }
+    const mskFmt = new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" });
+
+    /* ---------- Discord presence + music via Lanyard ---------- */
+    const music = { start: 0, end: 0, playing: false, track: "", lastP: 0 };
+    const act = { start: 0 };
+
+    function defaultAvatar(user = {}) {
+      const id = user.id || PROFILE.discordId;
+      return `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(id) >> 22n) % 6n)}.png`;
+    }
+    function avatarUrl(user = {}) {
+      if (!user.avatar) return defaultAvatar(user);
+      const ext = user.avatar.startsWith("a_") ? "gif" : "webp";
+      return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=256`;
+    }
+    const avatar = $("#avatar");
+    avatar.src = defaultAvatar();
+    avatar.onerror = () => { avatar.onerror = null; avatar.src = defaultAvatar(); };
+
+    function setStatus(status) {
+      const names = { online: "в сети", idle: "отошёл", dnd: "не беспокоить", offline: "не в сети" };
+      const s = names[status] ? status : "offline";
+      $("#presence").dataset.status = s;
+      $("#avatarDot").dataset.status = s;
+      $("#presenceText").textContent = names[s];
+    }
+
+    function renderCustomStatus(a) {
+      const el = $("#customStatus");
+      if (!a || (!a.state && !a.emoji)) { el.hidden = true; return; }
+      let emoji = "";
+      if (a.emoji?.id) emoji = `<img src="https://cdn.discordapp.com/emojis/${a.emoji.id}.${a.emoji.animated ? "gif" : "webp"}?size=32" alt="">`;
+      else if (a.emoji?.name) emoji = esc(a.emoji.name) + " ";
+      const html = emoji + esc(a.state || "");
+      if (el.innerHTML !== html) el.innerHTML = html;
+      el.hidden = false;
+    }
+
+    const ACT = {
+      0: ["🎮", "играет в"],
+      1: ["📺", "стримит"],
+      2: ["🎧", "слушает"],
+      3: ["👀", "смотрит"],
+      5: ["🏆", "соревнуется в"]
+    };
+    function renderActivity(a) {
+      const box = $("#activity");
+      if (!a) { box.hidden = true; act.start = 0; return; }
+      const [icon, verb] = ACT[a.type] || ["✨", ""];
+      $("#actIcon").textContent = icon;
+      $("#actName").textContent = `${verb} ${a.name}`.trim();
+      act.start = a.timestamps?.start || 0;
+      act.info = [a.details, a.state].filter(Boolean).join(" · ");
+      box.hidden = false;
+      tickActivity();
+    }
+    function tickActivity() {
+      if ($("#activity").hidden) return;
+      const time = act.start ? `<b>${fmt(Date.now() - act.start)}</b>` : "";
+      $("#actInfo").innerHTML = [esc(act.info || ""), time].filter(Boolean).join(" · ");
+    }
+
+    function extractAccent(url) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const c = document.createElement("canvas");
+          c.width = c.height = 24;
+          const ctx = c.getContext("2d", { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, 24, 24);
+          const d = ctx.getImageData(0, 0, 24, 24).data;
+          let r = 0, g = 0, b = 0, w = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            const max = Math.max(d[i], d[i + 1], d[i + 2]), min = Math.min(d[i], d[i + 1], d[i + 2]);
+            const weight = ((max - min) / 255) ** 2 * (max / 255) + .001;
+            r += d[i] * weight; g += d[i + 1] * weight; b += d[i + 2] * weight; w += weight;
+          }
+          const [h, s] = rgbToHsl(r / w, g / w, b / w);
+          // tone it like an M3 "primary" on dark: light and a bit pastel
+          document.documentElement.style.setProperty("--accent", `hsl(${h} ${Math.min(90, Math.max(35, s + 15))}% 76%)`);
+        } catch { /* cover host blocked pixel reads — keep the default accent */ }
+      };
+      img.src = url;
+    }
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+      if (max === min) return [0, 0, l * 100];
+      const d = max - min, s = l > .5 ? d / (2 - max - min) : d / (max + min);
+      let h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      return [Math.round(h * 60), Math.round(s * 100), Math.round(l * 100)];
+    }
+
+    function swapIn(el) { el.classList.remove("swap"); void el.offsetWidth; el.classList.add("swap"); }
+
+    function renderTrack(sp) {
+      const key = sp.track_id || sp.song;
+      const changed = key !== music.track;
+      music.track = key;
+      music.playing = true;
+      music.start = sp.timestamps?.start || Date.now();
+      music.end = sp.timestamps?.end || music.start;
+      $("#music").classList.add("playing");
+      $("#musicLabel").textContent = "now playing";
+      if (changed) {
+        $("#trackTitle").textContent = sp.song || "Unknown track";
+        $("#trackArtist").textContent = (sp.artist || "Unknown artist").replace(/;\s*/g, ", ");
+        $("#trackAlbum").textContent = sp.album || "—";
+        $("#trackLink").href = sp.track_id ? `https://open.spotify.com/track/${sp.track_id}` : PROFILE.socials.spotify;
+        swapIn($("#meta"));
+        if (sp.album_art_url) {
+          $("#cover").src = sp.album_art_url;
+          $("#cover").hidden = false;
+          $("#coverPh").style.display = "none";
+          $("#musicBg").style.backgroundImage = `url("${sp.album_art_url}")`;
+          extractAccent(sp.album_art_url);
+        }
+      }
+      tickMusic();
+    }
+
+    function renderIdle() {
+      if (!music.playing && music.track === "idle") return;
+      music.playing = false;
+      music.track = "idle";
+      $("#music").classList.remove("playing");
+      $("#musicLabel").textContent = "сейчас тишина";
+      $("#trackTitle").textContent = "тишина";
+      $("#trackArtist").textContent = "ничего не играет";
+      $("#trackAlbum").textContent = "—";
+      $("#trackLink").href = PROFILE.socials.spotify;
+      $("#cover").hidden = true;
+      $("#coverPh").style.display = "";
+      $("#elapsed").textContent = "0:00";
+      $("#duration").textContent = "0:00";
+      $("#remain").textContent = "";
+      setProgress(0);
+      document.documentElement.style.removeProperty("--accent");
+      swapIn($("#meta"));
+    }
+
+    function setProgress(p) {
+      const bar = $("#wbar");
+      if (p < music.lastP) { bar.classList.add("jump"); void bar.offsetWidth; }
+      bar.style.setProperty("--p", p.toFixed(4));
+      if (p < music.lastP) requestAnimationFrame(() => bar.classList.remove("jump"));
+      music.lastP = p;
+    }
+
+    function tickMusic() {
+      if (!music.playing) return;
+      const total = Math.max(1, music.end - music.start);
+      const elapsed = Math.min(Math.max(0, Date.now() - music.start), total);
+      $("#elapsed").textContent = fmt(elapsed);
+      $("#duration").textContent = fmt(total);
+      $("#remain").textContent = `−${fmt(total - elapsed)}`;
+      setProgress(elapsed / total);
+    }
+
+    function applyPresence(d) {
+      if (!d) return;
+      setStatus(d.discord_status);
+      const u = d.discord_user;
+      if (u) {
+        const src = avatarUrl(u);
+        if (avatar.src !== src) avatar.src = src;
+        if (u.username) {
+          $("#handle").textContent = "@" + u.username;
+          $("#discordHandle").textContent = "@" + u.username;
+        }
+        const deco = u.avatar_decoration_data?.asset;
+        const decoEl = $("#avatarDeco");
+        if (deco) { decoEl.src = `https://cdn.discordapp.com/avatar-decoration-presets/${deco}.png?size=240&passthrough=true`; decoEl.hidden = false; }
+        else decoEl.hidden = true;
+      }
+      const acts = d.activities || [];
+      renderCustomStatus(acts.find((a) => a.type === 4));
+      renderActivity(acts.find((a) => a.type !== 4 && a.id !== "spotify:1" && a.name !== "Spotify"));
+      if (d.listening_to_spotify && d.spotify) renderTrack(d.spotify);
+      else renderIdle();
+    }
+
+    const lanyard = { ws: null, hb: 0, retry: 1500 };
+    function connectLanyard() {
+      const id = PROFILE.discordId;
+      let ws;
+      try { ws = new WebSocket("wss://api.lanyard.rest/socket"); }
+      catch { setStatus("offline"); return renderIdle(); }
+      lanyard.ws = ws;
+      ws.addEventListener("message", (e) => {
+        let msg;
+        try { msg = JSON.parse(e.data); } catch { return; }
+        if (msg.op === 1) {
+          clearInterval(lanyard.hb);
+          lanyard.hb = setInterval(() => ws.readyState === 1 && ws.send(JSON.stringify({ op: 3 })), msg.d.heartbeat_interval);
+          ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: id } }));
+          lanyard.retry = 1500;
+        } else if (msg.op === 0) {
+          applyPresence(msg.d?.discord_user ? msg.d : msg.d?.[id]);
+        }
+      });
+      ws.addEventListener("close", () => {
+        clearInterval(lanyard.hb);
+        setTimeout(connectLanyard, lanyard.retry);
+        lanyard.retry = Math.min(lanyard.retry * 2, 30000);
+      });
+      ws.addEventListener("error", () => { try { ws.close(); } catch {} });
+    }
+
+    function tick() {
+      tickMusic();
+      tickActivity();
+      $("#mskTime").textContent = mskFmt.format(new Date());
+    }
+    tick();
+    setInterval(tick, 1000);
+    connectLanyard();
+
+    /* ---------- facts ---------- */
+    const facts = { order: [], pos: 0 };
+    facts.order = FACTS.map((_, i) => i);
+    for (let i = facts.order.length - 1; i > 0; i--) {
+      const j = Math.random() * (i + 1) | 0;
+      [facts.order[i], facts.order[j]] = [facts.order[j], facts.order[i]];
+    }
+    function showFact(step) {
+      facts.pos = (facts.pos + step + FACTS.length) % FACTS.length;
+      const [emoji, text] = FACTS[facts.order[facts.pos]];
+      const box = $("#factText");
+      const render = () => {
+        box.classList.remove("out");
+        box.textContent = "";
+        text.split(" ").forEach((word, k) => {
+          const span = document.createElement("span");
+          span.className = "w";
+          span.style.animationDelay = `${k * 38}ms`;
+          span.textContent = word;
+          box.append(span, " ");
+        });
+        $("#factEmoji").textContent = emoji;
+        root.setProperty("--fact-shape", shape(4 + (Math.random() * 9 | 0), .12 + Math.random() * .1));
+        scramble($("#factNum"), `${String(facts.pos + 1).padStart(2, "0")} / ${String(FACTS.length).padStart(2, "0")}`, 500);
+        const timer = $("#factTimer");
+        timer.classList.remove("run");
+        void timer.offsetWidth;
+        timer.classList.add("run");
+      };
+      if (step === 0 || reduceMotion) render();
+      else { box.classList.add("out"); setTimeout(render, 220); }
+    }
+    $("#factTimer").addEventListener("animationend", () => showFact(1));
+    $("#factNext").addEventListener("click", () => showFact(1));
+    $("#factPrev").addEventListener("click", () => showFact(-1));
+    $("#factBody").addEventListener("click", () => showFact(1));
+    showFact(0);
+
+    /* ---------- chat (comments.app) ---------- */
+    function loadComments() {
+      const mount = $("#commentsMount");
+      mount.textContent = "";
+      const s = document.createElement("script");
+      s.async = true;
+      s.src = "https://comments.app/js/widget.js?3";
+      s.dataset.commentsAppWebsite = "PlNVWl0S";
+      s.dataset.limit = "5";
+      s.dataset.dislikes = "1";
+      s.dataset.outlined = "1";
+      s.dataset.colorful = "1";
+      s.dataset.dark = "1";
+      mount.appendChild(s);
+    }
+    if ("requestIdleCallback" in window) requestIdleCallback(loadComments, { timeout: 2500 });
+    else setTimeout(loadComments, 1400);
+  </script>
+
+  <!-- the input at the very bottom -->
+  <script>
+    (function () {
+      // Answers are AES-GCM encrypted with a key derived (PBKDF2) from the word itself.
+      // Without typing the right word there is nothing to read here.
+      // Add entries from tools/secret.html into m: { ... } below.
+      const V = {
+        s: "BBzg_IwVzc73aMap",
+        n: 250000,
+        m: {
+        }
+      };
+      const NOPE = ["хм… нет", "холодно 🥶", "не-а", "мимо", "попробуй ещё", "это не то слово", "🤨", "тепло… шучу, холодно"];
+      const te = new TextEncoder();
+      const norm = (s) => s.toLowerCase().replace(/ё/g, "е").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+      const hex = (a) => Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+      const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+      async function open(text) {
+        const p = norm(text);
+        if (!p || !window.crypto?.subtle) return null;
+        const base = await crypto.subtle.importKey("raw", te.encode(p), "PBKDF2", false, ["deriveBits"]);
+        const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: te.encode(V.s), iterations: V.n }, base, 512));
+        const hit = V.m[hex(bits.subarray(32, 44))];
+        if (!hit) return null;
+        const key = await crypto.subtle.importKey("raw", bits.subarray(0, 32), "AES-GCM", false, ["decrypt"]);
+        try {
+          return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(hit[0]) }, key, unb64(hit[1])));
+        } catch { return null; }
+      }
+
+      const out = document.getElementById("secretOut");
+      const form = document.getElementById("secretForm");
+      const input = document.getElementById("secretInput");
+      const send = document.getElementById("secretSend");
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let current = null;
+
+      // Thanos snap: redraw the answer on a canvas, then blow it away pixel by pixel, left to right.
+      function snap(el) {
+        if (!el || el.dataset.gone) return;
+        el.dataset.gone = "1";
+        clearTimeout(el._t);
+        if (still) { el.remove(); return; }
+        const box = el.getBoundingClientRect();
+        const pad = 160, dpr = Math.min(devicePixelRatio || 1, 2);
+        const W = box.width + pad * 2, H = box.height + pad * 2;
+        const c = document.createElement("canvas");
+        c.className = "dust";
+        c.width = W * dpr; c.height = H * dpr;
+        c.style.cssText = `left:${box.left - pad}px;top:${box.top - pad}px;width:${W}px;height:${H}px`;
+        const ctx = c.getContext("2d", { willReadFrequently: true });
+        ctx.scale(dpr, dpr);
+        const cs = getComputedStyle(el);
+        ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        ctx.fillStyle = cs.color;
+        ctx.textBaseline = "middle";
+        el.querySelectorAll(".wd").forEach((w) => {
+          const r = w.getBoundingClientRect();
+          ctx.fillText(w.textContent, r.left - box.left + pad, r.top - box.top + pad + r.height / 2);
+        });
+        const data = ctx.getImageData(0, 0, c.width, c.height).data;
+        const dust = [], step = Math.max(1, Math.round(1.5 * dpr));
+        for (let y = 0; y < c.height; y += step) for (let x = 0; x < c.width; x += step) {
+          const i = (y * c.width + x) * 4;
+          if (data[i + 3] < 70) continue;
+          const px = x / dpr, py = y / dpr;
+          dust.push({
+            x: px, y: py,
+            col: `rgb(${data[i]},${data[i + 1]},${data[i + 2]})`,
+            delay: ((px - pad) / Math.max(1, box.width)) * 650 + Math.random() * 420,
+            vx: 40 + Math.random() * 110, vy: -(20 + Math.random() * 90),
+            wob: Math.random() * 6.28
+          });
+        }
+        document.body.appendChild(c);
+        el.remove();
+        const t0 = performance.now(), LIFE = 1100;
+        const frame = (now) => {
+          const t = now - t0;
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, c.width, c.height);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          let alive = 0;
+          for (const p of dust) {
+            const k = (t - p.delay) / LIFE;
+            if (k >= 1) continue;
+            alive++;
+            if (k <= 0) { ctx.globalAlpha = 1; ctx.fillStyle = p.col; ctx.fillRect(p.x, p.y, 1.6, 1.6); continue; }
+            const e = k * k;
+            ctx.globalAlpha = 1 - k;
+            ctx.fillStyle = p.col;
+            ctx.fillRect(p.x + p.vx * e + Math.sin(p.wob + k * 6) * 4 * k, p.y + p.vy * e - 30 * e, 1.6 * (1 - k * .5), 1.6 * (1 - k * .5));
+          }
+          if (alive) requestAnimationFrame(frame); else c.remove();
+        };
+        requestAnimationFrame(frame);
+      }
+
+      function show(text, hit) {
+        const el = document.createElement("p");
+        el.className = "answer" + (hit ? " hit" : "");
+        text.split(" ").forEach((word, i) => {
+          if (i) el.append(" ");
+          const w = document.createElement("span");
+          w.className = "wd";
+          w.textContent = word;
+          el.append(w);
+        });
+        out.append(el);
+        current = el;
+        el._t = setTimeout(() => snap(el), 2200 + text.length * 45);
+        if (hit) {
+          const r = input.getBoundingClientRect();
+          window.fieldBurst?.(r.left + r.width / 2, r.top, 2);
+        }
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text || send.disabled) return;
+        snap(current);
+        input.value = "";
+        send.disabled = true;
+        form.classList.add("busy");
+        const started = performance.now();
+        let answer = null;
+        try { answer = await open(text); } catch {}
+        const left = 450 - (performance.now() - started);
+        if (left > 0) await new Promise((r) => setTimeout(r, left));
+        form.classList.remove("busy");
+        show(answer ?? NOPE[Math.random() * NOPE.length | 0], !!answer);
+        send.disabled = false;
+        input.focus();
+      });
+    })();
+  </script>
+
+  <!-- antigravity-style particle field around the cursor -->
+  <script>
+    (function () {
+      const canvas = document.getElementById("field");
+      const ctx = canvas.getContext("2d");
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const COLORS = ["#d0bcff", "#efb8c8", "#8ab4f8", "#a8e6cf", "#ffd59e", "#ffffff"];
+      let W = 0, H = 0, dpr = 1, parts = [];
+      const ptr = { x: -9999, y: -9999, sx: -9999, sy: -9999, on: 0, want: 0 };
+
+      function build() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = innerWidth; H = innerHeight;
+        canvas.width = W * dpr; canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const count = Math.round(Math.min(720, Math.max(180, (W * H) / 2600)));
+        const cols = Math.max(1, Math.round(Math.sqrt(count * W / H))), rows = Math.ceil(count / cols);
+        parts = [];
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+          const hx = (c + Math.random()) * (W / cols), hy = (r + Math.random()) * (H / rows);
+          parts.push({
+            hx, hy, x: hx, y: hy, vx: 0, vy: 0,
+            len: 3 + Math.random() * 5, w: 1.6 + Math.random() * 1.4,
+            col: Math.random() * COLORS.length | 0,
+            seed: Math.random() * 1000, ring: Math.random(), ang: Math.random() * Math.PI * 2, glow: 0,
+            rise: .06 + Math.random() * .18
+          });
+        }
+        parts.sort((a, b) => a.col - b.col);
+      }
+
+      function frame(now) {
+        const t = now || 0;
+        ptr.on += (ptr.want - ptr.on) * .06;
+        ptr.sx += (ptr.x - ptr.sx) * .18;
+        ptr.sy += (ptr.y - ptr.sy) * .18;
+        const R = Math.max(220, Math.min(W, H) * .32);
+        const ringBase = R * .38;
+        ctx.clearRect(0, 0, W, H);
+        ctx.lineCap = "round";
+        let lastCol = -1;
+
+        for (const p of parts) {
+          // float upward forever — antigravity
+          if (!still) {
+            p.hy -= p.rise;
+            if (p.hy < -20) { p.hy += H + 40; p.y += H + 40; p.x = p.hx; }
+          }
+          const hx = p.hx + Math.sin(t * .0004 + p.seed) * 10;
+          const hy = p.hy + Math.cos(t * .00035 + p.seed * 1.3) * 10;
+
+          const dx = hx - ptr.sx, dy = hy - ptr.sy;
+          const d = Math.hypot(dx, dy) || 1;
+          let tx = hx, ty = hy, w = 0;
+          if (ptr.on > .01 && d < R) {
+            w = 1 - d / R;
+            w = w * w * (3 - 2 * w) * ptr.on;
+            const a = Math.atan2(dy, dx) + t * .0006 + p.ring * .6;
+            const rr = ringBase * (.75 + p.ring * .7) + Math.sin(t * .002 + p.seed) * 6;
+            tx = hx + (ptr.sx + Math.cos(a) * rr - hx) * w;
+            ty = hy + (ptr.sy + Math.sin(a) * rr - hy) * w;
+          }
+          p.vx = (p.vx + (tx - p.x) * .07) * .82;
+          p.vy = (p.vy + (ty - p.y) * .07) * .82;
+          p.x += p.vx; p.y += p.vy;
+          p.glow += (w - p.glow) * .12;
+
+          // point toward the cursor when close, otherwise along the motion
+          const speed = Math.hypot(p.vx, p.vy);
+          const want = p.glow > .05 ? Math.atan2(p.y - ptr.sy, p.x - ptr.sx) : speed > .4 ? Math.atan2(p.vy, p.vx) : p.ang + .004;
+          let diff = want - p.ang;
+          diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+          p.ang += diff * .14;
+
+          const len = p.len * (1 + p.glow * 1.6 + Math.min(speed * .15, 1.5));
+          const cx = Math.cos(p.ang) * len / 2, cy = Math.sin(p.ang) * len / 2;
+          if (p.col !== lastCol) { ctx.strokeStyle = COLORS[p.col]; lastCol = p.col; }
+          ctx.globalAlpha = .1 + p.glow * .9;
+          ctx.lineWidth = p.w * (1 + p.glow * .4);
+          ctx.beginPath();
+          ctx.moveTo(p.x - cx, p.y - cy);
+          ctx.lineTo(p.x + cx, p.y + cy);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        if (!still) requestAnimationFrame(frame);
+      }
+
+      // explode outward from a point (click / easter egg)
+      window.fieldBurst = (x, y, power = 1) => {
+        for (const p of parts) {
+          const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1;
+          const f = Math.max(0, 1 - d / (320 * power)) * 16 * power;
+          p.vx += dx / d * f; p.vy += dy / d * f;
+        }
+      };
+
+      const move = (x, y) => {
+        if (ptr.want === 0 && ptr.on < .05) { ptr.sx = x; ptr.sy = y; }
+        ptr.x = x; ptr.y = y; ptr.want = 1;
+      };
+      addEventListener("pointermove", (e) => move(e.clientX, e.clientY), { passive: true });
+      addEventListener("touchmove", (e) => e.touches[0] && move(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+      addEventListener("touchend", () => { ptr.want = 0; }, { passive: true });
+      document.documentElement.addEventListener("pointerleave", () => { ptr.want = 0; });
+      addEventListener("blur", () => { ptr.want = 0; });
+      addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse") window.fieldBurst(e.clientX, e.clientY, .8); });
+
+      let rt = 0;
+      addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { build(); if (still) frame(0); }, 150); });
+      build();
+      requestAnimationFrame(frame);
+    })();
+  </script>
 </body>
 </html>
