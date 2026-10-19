@@ -1080,32 +1080,11 @@
     (function () {
       // Answers are AES-GCM encrypted with a key derived (PBKDF2) from the word itself.
       // Without typing the right word there is nothing to read here.
+      // Add entries from tools/secret.html into m: { ... } below.
       const V = {
         s: "BBzg_IwVzc73aMap",
         n: 250000,
         m: {
-      "05add2a133dc421e38f3dbbe": ["6xU8d0h1Y9KnvN08", "zJSZLsflbv445B0a74HIfAmbq5qrLoK79OZX/Lpeta2I4gkirFOyCuqDodk7wo02Wv+OP+QrvJ42POLDAxELUELBSkii1sy6kU+m8k5qxRDHpd8u7d/m5D+fImeV9z325e4VHM1hejkxMT38GJWdQ9dkGJ5IQ3t2m0vgIvk="],
-      "0646e0c592461f103ad6ab2d": ["k0b2ygWVh8tf2Tro", "Ec8/l6kJTM++seiBnVCmIYZWNpFmpbOVrH1+Cv59OKHEYSRK2ACWmGaP99isMmrCs6TOZi6y3cZjcaXHExzR/ploJXxdpaxhVgPoP6z3"],
-      "0aa53b70de7287583cb29c88": ["kcM8cutWvf01XE16", "eeBZspUa8ugCF+EN1D6JHjlxV08aGxEFBPu4xbbbSLx3DJYZOvkGvOnhZM3CG2Y2Eg62AXQRGXaGpO9OeBOUcgQxBQupkDU="],
-      "0e8ea5dca3be8a63c1ab3aad": ["KIojg7HHJQOgtwUf", "ThbIhMAiEWHFzE7IanFCx5+jpZmBzTvIrH02PqGuhlvE2X++Exk28Q6vMo12Ermbo3rmLuA04gOZqE/X5S1iZ0Ja4TkkeXNG7fX+"],
-      "27f49c02da8ccfb2593c9677": ["J8PU2tOW0S/mty3G", "FhO5/nxhBq8FY8pucHThK658elt0eqEzr9L9ok1IhUOzVs5rGPcNcgTG8E/7c1hrnJr0ruM/n/hSnDDjAhTmsDY9N3d91MTB8GlwnwHtz0KZ6g8d0WMepWG1GniyXM+S1MnPwLCP8fQ="],
-      "3d0b51c4b761ba9e393634d5": ["8SrJXWU53xwHqafw", "2l1zTCSrcdwgJY586SSD1VQGjQbq7gSm2u8s9qUNxAJTiOb3a81gWISVrKLZ/J2KLvkeTYd3HQReryLjWp/RMuunvjtYKgBZ+ozxVthyYx51ivALLw18G8SrtGQvuyItDLNkvDjywwE="],
-      "48100775558b96cc0129e8fe": ["lX7KOb/LKdeVA+Ap", "lSE5/8IleRN/T7CZXpqCd11AXdJwkSJXsXCRWQny1mKccVpB69A9bVK3jScn0RtyVP5q+vr8wXRP9/kH0UOg+NcNeWjZcP3KcVoPqk62CRhBRIqtJo9VDg=="],
-      "54d1a35049405c7549c99121": ["tYWhaLR9V6dikFBu", "JeyZzR/Hrf31E/LI1eURkjFFYILOHXDwD5CIpruUbVNAKZILpOzXL7xJVRe5cd/m/NoPJlj6Qg=="],
-      "573a353755b39d8c0a08bb75": ["ujJDd4pIEFd1RwHY", "m+GPQzUXuMPu7rtBkGph4WPItp37XbgVp078gk9IGgkRTvbJmfNR+bdGD/0ZgPN2xHNWDlC7D7wlpoejV1xTdcImYL0EpgjgQSf5Joimpf95Y8Jqdqda1MrPiz6Th7Jl14/Idbd9/Kk="],
-      "64142582eea92901e7aa7851": ["HikpMygIvGFn/Eka", "6CMj4v2tcdetcXWvzw2QeVrt8S+ZJpxosL1vsQ=="],
-      "7621e51cfe0e024919376759": ["uyLOSg4FXN+EtFk3", "CW1Zgi70nUTvzNFhnZouHWw/4cDHe6jAAunUBn3cJY/puld4DVbOo3te5eWR/tteangyWCC+aLKpKpdCYsnAV6u8Ln8MRAh74uOmf9KF"],
-      "92745fb981490c154a859dc7": ["YS5nbYJPXFoWK9/r", "roTwV1Nd3kBI3BLwYmF8OtklZq953Z1I/aSf6mFPcWQVFqGAAPDVtTwFoPu/gsfSdlO3ycQorFt/YUkpRoNZZ0Uul6XYIPWuHYSY1m6EXpIM/HrgRglR"],
-      "9dd020660be16f25e5d239a1": ["LfNEZPRbl1+Z/JkC", "Kv6sL3KDVoVE/qLgoa7KaD9musxBIKb3JoVak+ozGfqy/fGqEN0sSxqe2aavqOmzmA6rzzAXNKG7Icz9PbZ6kUo0MV9KjIg="],
-      "ab5cc063c7f090615326a6f2": ["2Cu/F4us1eWrc9XS", "KMhdhiNhrq1lFYoUTI9LzaDpa6BA7hys0Rv9r9bJM00R2sELFW2V6HQ2V6xYZnc="],
-      "c74b9d66f0f47c41066cf485": ["fUwwiUt36nomP3hc", "W0guRPgov9GtWc6Q05+PiUNX94H08W5lFHsxj8nt0YbhS2PGfzwLvv0zzCIFmRi4PKxvr319vBsk8kEb9IbrOd4chuvrwAbLAbHpA/SADFakXTo/upqwowwP5SPEIIERFzP4s9lKSDI="],
-      "c80c5eb9219530a9ed5350ce": ["RFXPoYq7WYhUuZS6", "z9BluPHrdfN9MpS+V1GMyiY5LJlHrUzXPS6ARYYaDX/43BLo3yiSuxTJMrWIwZ/v/0fBsJAFe4c5BtDena7dtpLXrLlxymTR/8Ndk7xqptigAQePLawRALQ3INpyW/TdhY7AthADYHS/1uza35reMUOIyKtmcFZzrwFQ6hY="],
-      "c80c5eb9219530a9ed5350ce": ["5U+1+yoQNoG6hy0P", "nGd2e8+wflZXCbpfL3l2x7SAH8cTyGPkdsonYTGEO9pR+iNu8Eq1MlGuxbsvTh/t78cyhF1cD77NUxaiuzmHwC/ZNc3jNkw6GIptInhqfsKTqHviqOVU4kCu6nc1IKyYB3zWeJQeHjSpN9u0cFh4ZJdgePl//pBQ1kY9yvQ="],
-      "cb50c832645995d648b5d460": ["apIr29Xk9s9e4eMU", "dbeo4xk/bQkIDekSlLzb4L36O1MoenxPih4yVXQig1cxxLdA1B/TGzIuOttJ6RbyRsw/"],
-      "de67675ec5b27ad2cee558f0": ["7sAK2AlYI2ZMPCyX", "AvC/Hycs+NauluJGjtz7GwGh7cJCBFNSNKbshj/mYWN6NcFXzHcOPEwnfCA8T+vzS7Q0/wKAwCG1KqaDfJ6SspAb9UHQLBn65bEp8yZ3+BcIw+XDMXO+dQ=="],
-      "e954e7ffd91daa31339cdbf1": ["K9JRrkKgvZsOyjv1", "BeXA8mp2426nvdEwfgapcHLKRjns8++ih9MOtOCCJw9BSFmbWguZXJz9zBYSD3yxTavo0bBDSU9yZ3fHYoYO7G84hCExsbY="],
-      "fb5b4597fc3f4b5f87f7b6a4": ["L+8P13hfBEUirlUG", "wuFoV41L49cXmqvnQAHa1mgCa8R0Zys4fbWC+ow9GnJgLuE4UaoooTbhdvmdsNL6tpAMCCcaPz1vSC0mZ41JvVRI"],
-      "fed21e9737eaf55661ea93ef": ["zfhVjZdFnU3PGOJC", "KfJpQxD7Qsi3ifcKiyZ5TpzKX0A7poaGZfkrqiaXoClEOPINr7WCKRl1MrmHkgk="]
         }
       };
       const NOPE = ["хм… нет", "холодно 🥶", "не-а", "мимо", "попробуй ещё", "это не то слово", "🤨", "тепло… шучу, холодно"];
