@@ -182,7 +182,9 @@
     .chip svg { width: 18px; height: 18px; fill: currentColor; flex: 0 0 auto; }
     .chip b { font-family: var(--mono); font-weight: 500; color: var(--on-surface); font-variant-numeric: tabular-nums; }
     .chip.tonal { border-color: transparent; background: var(--secondary-c); color: var(--on-secondary-c); }
-    a.chip:hover { border-radius: var(--full); transform: translateY(-1px); }
+    @media (hover: hover) and (pointer: fine) {
+      a.chip:hover { border-radius: var(--full); transform: translateY(-1px); }
+    }
 
     .icon-btn {
       width: 40px; height: 40px;
@@ -195,14 +197,18 @@
       transition: background .2s var(--ease), color .2s var(--ease), transform .45s var(--spring), border-radius .45s var(--spring);
     }
     .icon-btn svg { width: 20px; height: 20px; fill: currentColor; }
-    .icon-btn:hover { background: var(--primary-c); color: var(--on-primary-c); border-radius: 12px; }
-    .icon-btn:active { transform: scale(.88); }
+    @media (hover: hover) and (pointer: fine) {
+      .icon-btn:hover { background: var(--primary-c); color: var(--on-primary-c); }
+    }
+    .icon-btn:active { border-radius: 14px; transform: scale(.9); background: var(--primary-c); color: var(--on-primary-c); }
 
     /* ---- app bar ---- */
     .appbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 2px; animation: rise .8s var(--ease-emph) backwards; }
     .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -.02em; font-stretch: 115%; }
     .brand img { width: 30px; height: 30px; border-radius: 9px; transition: transform .6s var(--spring); }
-    .brand:hover img { transform: rotate(-12deg) scale(1.1); }
+    @media (hover: hover) and (pointer: fine) {
+      .brand:hover img { transform: rotate(-12deg) scale(1.1); }
+    }
     .status { background: rgba(43, 41, 48, .8); border-color: rgba(255, 255, 255, .06); backdrop-filter: blur(10px); }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #80848e; box-shadow: 0 0 0 4px rgba(128, 132, 142, .14); transition: background .3s, box-shadow .3s; }
     [data-status="online"] .dot { background: #23a55a; box-shadow: 0 0 0 4px rgba(35, 165, 90, .16), 0 0 14px #23a55a; }
@@ -242,7 +248,9 @@
     .av-ring { inset: 0; background: conic-gradient(from 0deg, var(--accent), var(--tertiary), #8ab4f8, var(--accent)); }
     .av-clip { inset: 7px; background: var(--sc-high); }
     .av-clip img { width: 100%; height: 100%; object-fit: cover; display: block; animation: spin 26s linear infinite reverse; transform-origin: 50% 50%; }
-    .avatar:hover .av-ring, .avatar:hover .av-clip { clip-path: var(--cookie-hover, circle(50%)); }
+    @media (hover: hover) and (pointer: fine) {
+      .avatar:hover .av-ring, .avatar:hover .av-clip { clip-path: var(--cookie-hover, circle(50%)); }
+    }
     .av-deco { position: absolute; inset: -12%; width: 124%; height: 124%; pointer-events: none; }
     .av-dot {
       position: absolute;
@@ -301,7 +309,9 @@
     @media (hover: hover) and (pointer: fine) {
       .nick:hover { font-stretch: 130%; letter-spacing: -.02em; }
     }
-    #nickBtn:hover { transform: rotate(180deg); }
+    @media (hover: hover) and (pointer: fine) {
+      #nickBtn:hover { transform: rotate(180deg); }
+    }
     .handle { margin: -6px 0 0; color: var(--on-surface-var); font-family: var(--mono); font-size: 13px; }
 
     .activity {
@@ -369,7 +379,9 @@
     }
     .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cover svg { width: 40px; height: 40px; fill: var(--outline); }
-    .track:hover .cover { border-radius: 34px; transform: rotate(-4deg); }
+    @media (hover: hover) and (pointer: fine) {
+      .track:hover .cover { border-radius: 34px; transform: rotate(-4deg); }
+    }
     .meta { min-width: 0; }
     .meta h2 {
       margin: 0;
@@ -430,7 +442,9 @@
       animation: spin 16s linear infinite;
     }
     .fact-shape span { position: relative; transition: transform .6s var(--spring); }
-    .fact-body:hover .fact-shape span { transform: scale(1.15) rotate(-8deg); }
+    @media (hover: hover) and (pointer: fine) {
+      .fact-body:hover .fact-shape span { transform: scale(1.15) rotate(-8deg); }
+    }
     .fact-text { margin: 0; font-size: 19px; line-height: 1.42; font-weight: 550; letter-spacing: -.01em; }
     .w { display: inline-block; animation: wordIn .7s var(--ease-emph) backwards; }
     @keyframes wordIn { from { opacity: 0; filter: blur(10px); transform: translateY(.6em) rotate(5deg) scale(.9); } }
@@ -440,7 +454,9 @@
     .fact-timer { flex: 1; height: 4px; border-radius: 4px; background: var(--sc-highest); overflow: hidden; }
     .fact-timer i { display: block; height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--primary), var(--tertiary)); transform-origin: left; transform: scaleX(0); }
     .fact-timer i.run { animation: timer 9s linear forwards; }
-    .facts:hover .fact-timer i.run { animation-play-state: paused; }
+    @media (hover: hover) and (pointer: fine) {
+      .facts:hover .fact-timer i.run { animation-play-state: paused; }
+    }
     @keyframes timer { to { transform: scaleX(1); } }
 
     /* ---- socials ---- */
@@ -456,7 +472,6 @@
       border: 1px solid rgba(255, 255, 255, .04);
       transition: background .25s var(--ease), border-radius .5s var(--spring), transform .5s var(--spring);
     }
-    .social:last-child { grid-column: span 2; }
     .social i {
       width: 44px; height: 44px;
       flex: 0 0 auto;
@@ -471,14 +486,18 @@
     .social strong { display: block; font-size: 16px; font-weight: 750; font-stretch: 108%; letter-spacing: -.01em; }
     .social small { display: block; margin-top: 2px; font-family: var(--mono); font-size: 11px; color: var(--on-surface-var); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .social > span { min-width: 0; }
-    .social:hover { background: color-mix(in srgb, var(--c) 16%, #2b2930); border-radius: 30px; transform: translateY(-3px); }
-    .social:hover i { clip-path: var(--cookie-small, circle(50%)); transform: rotate(40deg); background: var(--c); color: #fff; }
-    .social:hover i svg { transform: rotate(-40deg); }
+    @media (hover: hover) and (pointer: fine) {
+      .social:hover { background: color-mix(in srgb, var(--c) 16%, #2b2930); border-radius: 30px; transform: translateY(-3px); }
+      .social:hover i { clip-path: var(--cookie-small, circle(50%)); transform: rotate(40deg); background: var(--c); color: #fff; }
+      .social:hover i svg { transform: rotate(-40deg); }
+    }
     .social:active { transform: scale(.96); }
     @media (min-width: 720px) {
-      .social-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-      .social:last-child { grid-column: auto; }
+      .social-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .social { flex-direction: column; align-items: flex-start; gap: 18px; min-height: 132px; padding: 16px; }
+    }
+    @media (min-width: 940px) {
+      .social-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
     }
 
     /* ---- comments ---- */
@@ -548,7 +567,10 @@
       transition: transform .45s var(--spring), border-radius .45s var(--spring), opacity .2s;
     }
     .send svg { width: 20px; height: 20px; fill: currentColor; }
-    .send:hover { border-radius: 14px; transform: rotate(-12deg); }
+    @media (hover: hover) and (pointer: fine) {
+      .send:hover { transform: rotate(-12deg); }
+    }
+    .send:active { border-radius: 14px; transform: scale(.9); }
     .send:disabled { cursor: default; }
     .busy .send { animation: spin .8s linear infinite; border-radius: 14px; }
 
@@ -643,6 +665,7 @@
         <a class="social" data-social="spotify" style="--c:#1db954" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.48.66.3 1.02Zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-1.02-.12-1.14-.6-.12-.48.12-1.02.6-1.14 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.24 1.2Zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-1.02.6-1.56.3Z"/></svg></i><span><strong>Spotify</strong><small>что я слушаю</small></span></a>
         <a class="social" data-social="tiktok" style="--c:#ff2e88" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-2.08-2.77V9.4a6.34 6.34 0 1 0 5.53 6.29V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76c-.35 0-.68-.03-1.01-.07Z"/></svg></i><span><strong>TikTok</strong><small>@spiderkaras_</small></span></a>
         <a class="social" data-social="telegram" style="--c:#29a9eb" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.56 7.98-1.8 8.47c-.13.6-.49.75-.99.47l-2.74-2.02-1.32 1.27c-.15.15-.27.27-.55.27l.2-2.79 5.08-4.59c.22-.2-.05-.31-.34-.11l-6.28 3.95-2.7-.84c-.59-.18-.6-.59.12-.87l10.56-4.07c.49-.18.92.12.76.86Z"/></svg></i><span><strong>Telegram</strong><small>@badtexting</small></span></a>
+        <a class="social" data-social="github" style="--c:#8957e5" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></i><span><strong>GitHub</strong><small>spiderkarasio</small></span></a>
       </div>
     </section>
 
@@ -678,7 +701,8 @@
         discord: "https://discord.com/users/1407136994764525749",
         spotify: "https://open.spotify.com/",
         tiktok: "https://www.tiktok.com/@spiderkaras_",
-        telegram: "https://t.me/badtexting"
+        telegram: "https://t.me/badtexting",
+        github: "https://github.com/spiderkarasio"
       }
     };
 
@@ -1085,6 +1109,27 @@
         s: "BBzg_IwVzc73aMap",
         n: 250000,
         m: {
+      "0b8d2030b7b9bae9159460cb": ["9gR9soZRxaUZWkBb", "eB3oocd+6oaw908TSLj2hPjiWaOWJYCnctWWLMMMZgd6XZp8gLQz5NOwwFJiUpAekgUoY9thpgj1y/XO4Q=="],
+      "0bd9f2c76a75310eb5b1f3ef": ["sZnDcktmEgJYw00k", "jdwfMXu1o9rdA+61xp6fLOjcqzWHpQ=="],
+      "11e022d27cd30204e1bb8b3a": ["cU8FLEPGItlp0tsM", "wAuRxTmTXSEQQzro5hnr6BgesapULLdR"],
+      "1d21a6f7bf650d47ae246b6f": ["H6o43CpmKPnKd2ne", "klki4EFj55i0Ioe//upFCvCRKMzs3Z73ZGeCq09yDJJRfX3Ncw9Cfb0B/FVvz2f1Zk04dku5lXJgDbHe8HlpH3qWUA=="],
+      "1ee8c4e710ba08a105ca5f4e": ["u0fY/avIHRBHi9Dn", "Gb/z3RoYQ3XA1Uzlfm3PzCQ5GOzmz2xBjtJbxx1L/SNWirjT+B3Zi67mgzCsuFy3FDMJrxUHTAT0D+RWjvnQJmmLJusCLCB+U7DbPZESnDQbTiYbVKCehA=="],
+      "21e6cb18f0c52cb72c57e5ab": ["x/LbfoCTB3O4tXWL", "B33FRrV5NlcXXtylfl++pqY="],
+      "23565d0c24c9469f76f3dcdf": ["wKP/3E8uiIO2sAjH", "DvwRv8xmbnc4LIb925UDEt+lwbvJOcM/EZoPJ2iA6qu5tbRZ/2xVYePenxHJlr3h+GizXXf7zL9iNkwzszMM2kHPkBt9Fh0XBEI0mhegHx45IGtTIzvlz+0A8qxDDeiT6oOTmTgBqf3cNBNUSRpSybuSiueJwW4ZJJaSVNXg19fJX00XcF1904YtDuAA02R6"],
+      "32e76924cde3ad0e81f872da": ["RsznOI6hpLpEZt5Y", "xwUMFEBuKP0b7DZ4Xaej+YkP57k="],
+      "3aa3acc73c90eab4cd4a6f5e": ["9cFQDlDHb7Lw6kcJ", "ZEgUzsVy6p7fifIenxOMG45SLvNd9K4bVjGqFEgg+gkjOXx1oT4Ewz2OnVO/Jten"],
+      "3d0b51c4b761ba9e393634d5": ["0fhq8gnk6HS+t6Kz", "QS6f6PpEG7mithrEcNn5qMqdasT6Ilv7iiMVNQ=="],
+      "45755baa83e66653583f300e": ["JbrG4HqEPL2kpvgl", "4uWjH/MfhvSQ9KDF9NQpPPkwzZ/I1/lK"],
+      "7a135c7eef94c659dd283886": ["YMPOTLCD05VEDBnE", "JtfKp9K+6pdCM2PRvzue3epPSYGGQjXx77USTOsGorkoQy72JLlfOJFNDCa0z2Cw23k="],
+      "8bdb18e3732a07334d532d56": ["ubvNv3jNqwn2AMzO", "zcAdIcQ0yeJ7fgOle8qwZkte98EyuVbDO6LzxruPH4h5d5YjTr9bKHwu/26pTzshqVkFkLA="],
+      "9c0d806c0c2933685ce38a3d": ["iB3OmDI87EippAsn", "fHrD/gVSIVL5oXMdF9wzXPV5oxZG0vmBlMjQ8Mt2uDA="],
+      "bc53c5b310abdc54dd50d1aa": ["ERiiZnyS9eRQ10jc", "NPEJdMk4b5Jtor+tZaHudJRFmCWG14gfO7THEpb00lW++V5ZOf9I26YB5c7spg8tcEwrT0SqXieUHs1ROsZPFGCeiLMvf+kLHGYMX24gTOjpAu0CdVFujdUVFuvdf61XF8zC5OJB6ETvVcCXuQgMuxlr8Y/WEA=="],
+      "be9544e0cbc634aaf9d22ef5": ["zVTA4FbiF8YZId95", "XufajiQ4hbJf0uz+xUAjw6iwP0Nbxwq0"],
+      "d5b69e958b469b6e20e4b4c7": ["UmzmfH1WTPU4b6Aj", "c5wbexR0/OvTkglE9oYeiAuubXwZyyJC"],
+      "ddff055a47f9a5823fa7f014": ["4x2Ds0r1BZObfmqA", "QX/DrmwhM14q+Kv6SN8FOXQvccFpRRsF"],
+      "ef8c44248ae20eaf740f3a99": ["Kr+9Ywdg/1RVq/dY", "0R0ueGFBMPrEFa59pZmiXBgqbjwOpEDatq71AGZp4pJzSg=="],
+      "f2bfc27cd94a73170820a5d3": ["4BshdKR9tULc2hp0", "MCRWb10wdFRUdrQOofJBGdkadfHsTZZu8RkHZdrPqfoqd9yyLfexoNpfPLEWgw9hj0HTH85PANM5BS1gg1yLX78fXCiK73mGUm75dpxk0H3PW9BHdZrACK1dXAWCqF+hhVbFWXI+RpAKalimAI2y5w=="],
+      "f357dee38d5d171ee04ce3c8": ["2ZfIdwUDNAOlACRl", "RUjfPzoXz1xO+uALi1nb+OzmoEuP8NO8399MgdfGGVljthVB8730whF1VNJ71FjkCyAOx3/ILQ=="]
         }
       };
       const NOPE = ["хм… нет", "холодно 🥶", "не-а", "мимо", "попробуй ещё", "это не то слово", "🤨", "тепло… шучу, холодно"];
