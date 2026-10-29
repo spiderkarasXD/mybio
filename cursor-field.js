@@ -39,25 +39,25 @@
   const WORLD_HEIGHT = 31.5;
   const PALETTE_SIZE = 256;
 
-  // Original defaults, pushed harder: denser field, bigger capsules, a spinning ring, faster colour sweep.
+  // Tuned towards antigravity.google: a dense field of small blue capsules, slowly spinning ring, short streaks.
   const s = {
     magnet: 9,
     ring: 7,
     waveSpeed: 0.4,
     waveAmplitude: 1.6,
     waveCount: 3,
-    size: 1.15,
+    size: 0.7,
     follow: 0.07,
-    palette: ["#7c5cff", "#ff7af6", "#5ec8ff", "#c6a6ff"],
+    palette: ["#3d7bff", "#6b9bff", "#a7c1ff", "#5a6bff"],
     colorMode: 0,          // conic
-    colorSpeed: 0.12,
+    colorSpeed: 0.05,
     variance: 1,
     rotation: 0.35,
     depth: 1,
     pulse: 3,
     shape: 0,              // capsule
     tightness: 10,
-    ambient: 0.32,
+    ambient: 0.4,
     opacity: 1,
     maxRatio: 2,
     light: false
@@ -559,7 +559,7 @@ void main() {
     gl.uniform1f(u.uStops, s.palette.length);
     gl.uniform1f(u.uHue, hue);
     gl.uniform1f(u.uReveal, introClock < 3 ? clamp(introClock / 0.6, 0, 1) : 1);
-    gl.uniform1f(u.uStreak, unit * 30);
+    gl.uniform1f(u.uStreak, unit * 70);
     gl.uniform1f(u.uCharge, charge);
     gl.uniform1f(u.uOpacity, s.opacity);
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, field.total);
