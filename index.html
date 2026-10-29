@@ -79,7 +79,7 @@
     ::selection { background: var(--primary); color: var(--on-primary); }
 
     /* ---- antigravity particle field ---- */
-    #field { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 5; pointer-events: none; }
+    #field { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
 
     /* ---- layout ---- */
     .page {
@@ -124,10 +124,8 @@
       overflow: hidden;
       padding: 20px;
       border-radius: var(--r-xl);
-      background: rgba(29, 27, 32, .86);
-      border: 1px solid rgba(255, 255, 255, .06);
-      backdrop-filter: blur(14px) saturate(130%);
-      -webkit-backdrop-filter: blur(14px) saturate(130%);
+      background: rgba(29, 27, 32, .5);
+      border: 1px solid rgba(255, 255, 255, .07);
       box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
       transition: transform .5s var(--spring), border-color .3s var(--ease), border-radius .5s var(--spring);
       animation: rise .9s var(--ease-emph) backwards;
@@ -235,7 +233,7 @@
       padding: 34px 20px 26px;
       background:
         radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
-        rgba(29, 27, 32, .86);
+        rgba(29, 27, 32, .5);
       transition: transform .5s var(--spring), border-color .3s var(--ease), border-radius .5s var(--spring), background 1.2s var(--ease);
     }
     .avatar { position: relative; width: 148px; height: 148px; margin-bottom: 4px; }
