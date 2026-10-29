@@ -168,7 +168,7 @@
     canvas.height = Math.round(H * dpr);
     unit = Math.min(H, W * 1.4) / 0.35;
     dot = 3.5 * Math.min(0.6, Math.max(0.3, (W / 2000) * 0.6));
-    const gap = 0.0145 * unit;
+    const gap = 0.0095 * unit;   // denser than the original (~2.3x the particles)
     const pad = gap * 3;
     const pts = [];
     for (let y = -pad; y < H + pad; y += gap) for (let x = -pad; x < W + pad; x += gap) {
