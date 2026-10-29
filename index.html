@@ -344,6 +344,8 @@
       transition: opacity 1s var(--ease);
     }
     .music.playing .music-bg { opacity: .32; }
+    .src { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: lowercase; color: var(--outline); padding: 3px 9px; border: 1px solid var(--outline-var); border-radius: var(--full); }
+    .src:empty { display: none; }
     .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
     .eq i { width: 3px; height: 100%; border-radius: 2px; background: var(--accent); transform: scaleY(.25); transform-origin: bottom; transition: background .6s; }
     .music.playing .eq i { animation: eq .9s var(--ease) infinite; }
@@ -460,6 +462,9 @@
     @keyframes timer { to { transform: scaleX(1); } }
 
     /* ---- socials ---- */
+    .swarm { position: relative; height: 240px; margin-top: 8px; cursor: pointer; }
+    .swarm canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    @media (max-width: 600px) { .swarm { height: 190px; } }
     .social-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
     .social {
       display: flex;
@@ -618,8 +623,8 @@
 
     <section class="card music" id="music" style="--i:2">
       <div class="music-bg" id="musicBg"></div>
-      <div class="label"><span class="eq"><i></i><i></i><i></i><i></i></span><span id="musicLabel">now playing</span></div>
-      <a class="track" id="trackLink" href="https://open.spotify.com/" target="_blank" rel="noreferrer">
+      <div class="label"><span class="eq"><i></i><i></i><i></i><i></i></span><span id="musicLabel">now playing</span><span class="spacer"></span><span class="src" id="musicSrc"></span></div>
+      <a class="track" id="trackLink" href="https://www.last.fm/user/spiderkaras" target="_blank" rel="noreferrer">
         <div class="disc">
           <div class="vinyl-slot"><div class="vinyl"></div></div>
           <div class="cover">
@@ -659,10 +664,11 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l3.5-3.5a3 3 0 1 1 4.3 4.2l-2 2-1.4-1.4 2-2a1 1 0 0 0-1.5-1.4l-3.5 3.5a1 1 0 0 1-1.4 0Zm2.8-2.8a1 1 0 0 1 0 1.4l-3.5 3.5a3 3 0 1 1-4.3-4.2l2-2 1.4 1.4-2 2a1 1 0 0 0 1.5 1.4l3.5-3.5a1 1 0 0 1 1.4 0Z"/></svg>
         <span>to connect</span>
       </div>
+      <div class="swarm" id="swarm" role="link" tabindex="-1"><canvas aria-hidden="true"></canvas></div>
       <div class="social-grid">
         <a class="social" data-social="steam" style="--c:#66c0f4" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11.98 0C5.68 0 .51 4.86.02 11.04l6.43 2.66a3.38 3.38 0 0 1 1.91-.59h.19l2.86-4.14v-.06a4.57 4.57 0 1 1 4.57 4.53h-.11l-4.07 2.9v.16a3.39 3.39 0 0 1-6.72.67L.44 15.27A12 12 0 1 0 11.98 0Zm-3.62 18.75a2.25 2.25 0 0 0 2.24-2.25 2.25 2.25 0 0 0-2.24-2.24c-.17 0-.33.02-.49.05l1.07.44a1.66 1.66 0 1 1-1.29 3.06l-1-.42a2.24 2.24 0 0 0 1.71 1.36Zm7.62-6.83a3.01 3.01 0 1 0 0-6.02 3.01 3.01 0 0 0 0 6.02Zm0-.75a2.26 2.26 0 1 1 0-4.52 2.26 2.26 0 0 1 0 4.52Z"/></svg></i><span><strong>Steam</strong><small>spiderkarasXD</small></span></a>
         <a class="social" data-social="discord" style="--c:#5865f2" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.32 4.37A19.79 19.79 0 0 0 15.37 2c-.22.39-.47.92-.64 1.34a18.27 18.27 0 0 0-5.46 0A13.5 13.5 0 0 0 8.63 2a19.74 19.74 0 0 0-4.95 2.38C.55 9.04-.3 13.59.12 18.08a19.9 19.9 0 0 0 6.07 3.07c.49-.67.92-1.38 1.29-2.13-.71-.27-1.38-.6-2.02-.97.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.1 0l.49.38c-.64.38-1.32.7-2.02.97.37.75.8 1.46 1.29 2.13a19.86 19.86 0 0 0 6.07-3.07c.5-5.2-.85-9.72-3.56-13.71ZM8.02 15.33c-1.18 0-2.15-1.08-2.15-2.41 0-1.33.95-2.42 2.15-2.42 1.2 0 2.17 1.1 2.15 2.42 0 1.33-.95 2.41-2.15 2.41Zm7.96 0c-1.18 0-2.15-1.08-2.15-2.41 0-1.33.95-2.42 2.15-2.42 1.2 0 2.17 1.1 2.15 2.42 0 1.33-.95 2.41-2.15 2.41Z"/></svg></i><span><strong>Discord</strong><small id="discordHandle">профиль</small></span></a>
-        <a class="social" data-social="spotify" style="--c:#1db954" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.48.66.3 1.02Zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-1.02-.12-1.14-.6-.12-.48.12-1.02.6-1.14 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.24 1.2Zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-1.02.6-1.56.3Z"/></svg></i><span><strong>Spotify</strong><small>что я слушаю</small></span></a>
+        <a class="social" data-social="lastfm" style="--c:#d51007" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10.584 17.21l-.88-2.392s-1.43 1.594-3.573 1.594c-1.897 0-3.244-1.649-3.244-4.288 0-3.382 1.704-4.591 3.381-4.591 2.42 0 3.189 1.567 3.849 3.574l.88 2.749c.88 2.666 2.529 4.81 7.285 4.81 3.409 0 5.718-1.044 5.718-3.793 0-2.227-1.265-3.381-3.63-3.931l-1.758-.385c-1.21-.275-1.567-.77-1.567-1.595 0-.934.742-1.484 1.952-1.484 1.32 0 2.034.495 2.144 1.677l2.749-.33c-.22-2.474-1.924-3.492-4.729-3.492-2.474 0-4.893.935-4.893 3.932 0 1.87.907 3.051 3.189 3.601l1.87.44c1.402.33 1.869.907 1.869 1.704 0 1.017-.99 1.43-2.86 1.43-2.776 0-3.93-1.457-4.59-3.464l-.907-2.75c-1.155-3.573-2.997-4.893-6.653-4.893C2.144 5.333 0 7.89 0 12.233c0 4.18 2.144 6.434 5.993 6.434 3.106 0 4.591-1.457 4.591-1.457z"/></svg></i><span><strong>Last.fm</strong><small>spiderkaras</small></span></a>
         <a class="social" data-social="tiktok" style="--c:#ff2e88" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-2.08-2.77V9.4a6.34 6.34 0 1 0 5.53 6.29V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76c-.35 0-.68-.03-1.01-.07Z"/></svg></i><span><strong>TikTok</strong><small>@spiderkaras_</small></span></a>
         <a class="social" data-social="telegram" style="--c:#29a9eb" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.56 7.98-1.8 8.47c-.13.6-.49.75-.99.47l-2.74-2.02-1.32 1.27c-.15.15-.27.27-.55.27l.2-2.79 5.08-4.59c.22-.2-.05-.31-.34-.11l-6.28 3.95-2.7-.84c-.59-.18-.6-.59.12-.87l10.56-4.07c.49-.18.92.12.76.86Z"/></svg></i><span><strong>Telegram</strong><small>@badtexting</small></span></a>
         <a class="social" data-social="github" style="--c:#8957e5" target="_blank" rel="noreferrer"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></i><span><strong>GitHub</strong><small>spiderkarasio</small></span></a>
@@ -696,10 +702,13 @@
     const PROFILE = {
       nicknames: ["spiderkaras", "spiderkarasXD", "spidorkaras"],
       discordId: "1407136994764525749",
+      // Fallback for the music card when Discord shows no Spotify.
+      // Free key: https://www.last.fm/api/account/create  (paste the "API key", not the secret)
+      lastfm: { user: "spiderkaras", key: "" },
       socials: {
         steam: "https://steamcommunity.com/id/spiderkarasXD/",
         discord: "https://discord.com/users/1407136994764525749",
-        spotify: "https://open.spotify.com/",
+        lastfm: "https://www.last.fm/user/spiderkaras",
         tiktok: "https://www.tiktok.com/@spiderkaras_",
         telegram: "https://t.me/badtexting",
         github: "https://github.com/spiderkarasio"
@@ -826,7 +835,8 @@
     const mskFmt = new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" });
 
     /* ---------- Discord presence + music via Lanyard ---------- */
-    const music = { start: 0, end: 0, playing: false, track: "", lastP: 0 };
+    const music = { start: 0, end: 0, playing: false, live: false, mode: "idle", track: "", lastP: 0, spotify: null };
+    const lfm = { track: null, timer: 0 };
     const act = { start: 0 };
 
     function defaultAvatar(user = {}) {
@@ -919,50 +929,148 @@
 
     function swapIn(el) { el.classList.remove("swap"); void el.offsetWidth; el.classList.add("swap"); }
 
-    function renderTrack(sp) {
-      const key = sp.track_id || sp.song;
-      const changed = key !== music.track;
+    // Title / artist / album / cover / link. Returns false if this is the track already on screen.
+    function setMeta(key, t) {
+      if (key === music.track) return false;
       music.track = key;
+      $("#trackTitle").textContent = t.title || "Unknown track";
+      $("#trackArtist").textContent = t.artist || "Unknown artist";
+      $("#trackAlbum").textContent = t.album || "—";
+      $("#trackLink").href = t.href || PROFILE.socials.lastfm;
+      swapIn($("#meta"));
+      if (t.cover) {
+        $("#cover").src = t.cover;
+        $("#cover").hidden = false;
+        $("#coverPh").style.display = "none";
+        $("#musicBg").style.backgroundImage = `url("${t.cover}")`;
+        extractAccent(t.cover);
+      } else {
+        $("#cover").hidden = true;
+        $("#coverPh").style.display = "";
+        $("#musicBg").style.backgroundImage = "";
+        document.documentElement.style.removeProperty("--accent");
+      }
+      return true;
+    }
+
+    function setSource(label, src) {
+      $("#musicLabel").textContent = label;
+      $("#musicSrc").textContent = src || "";
+    }
+
+    // Spotify, straight from Discord (Lanyard): real start/end, so real progress.
+    function renderTrack(sp) {
+      music.mode = "spotify";
+      music.live = false;
       music.playing = true;
+      music.spotify = { title: sp.song, artist: sp.artist, at: Date.now() };
       music.start = sp.timestamps?.start || Date.now();
       music.end = sp.timestamps?.end || music.start;
       $("#music").classList.add("playing");
-      $("#musicLabel").textContent = "now playing";
-      if (changed) {
-        $("#trackTitle").textContent = sp.song || "Unknown track";
-        $("#trackArtist").textContent = (sp.artist || "Unknown artist").replace(/;\s*/g, ", ");
-        $("#trackAlbum").textContent = sp.album || "—";
-        $("#trackLink").href = sp.track_id ? `https://open.spotify.com/track/${sp.track_id}` : PROFILE.socials.spotify;
-        swapIn($("#meta"));
-        if (sp.album_art_url) {
-          $("#cover").src = sp.album_art_url;
-          $("#cover").hidden = false;
-          $("#coverPh").style.display = "none";
-          $("#musicBg").style.backgroundImage = `url("${sp.album_art_url}")`;
-          extractAccent(sp.album_art_url);
-        }
-      }
+      setSource("now playing", "spotify");
+      setMeta(sp.track_id || sp.song, {
+        title: sp.song,
+        artist: (sp.artist || "").replace(/;\s*/g, ", "),
+        album: sp.album,
+        cover: sp.album_art_url,
+        href: sp.track_id ? `https://open.spotify.com/track/${sp.track_id}` : ""
+      });
       tickMusic();
     }
 
+    function ago(ms) {
+      const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+      if (s < 60) return "только что";
+      const m = Math.round(s / 60);
+      if (m < 60) return `${m} мин назад`;
+      const h = Math.round(m / 60);
+      if (h < 24) return `${h} ч назад`;
+      return `${Math.round(h / 24)} дн назад`;
+    }
+
+    // Last.fm only says "this track is playing", never where in the track we are,
+    // so a live track gets a full wavy line instead of a progress bar.
+    function renderLastfm(t) {
+      const live = t.now;
+      music.mode = live ? "lastfm" : "recent";
+      music.live = live;
+      music.playing = live;
+      music.recentAt = t.at;
+      $("#music").classList.toggle("playing", live);
+      setSource(live ? "now playing" : "last played", "last.fm");
+      setMeta(`lfm:${live ? 1 : 0}:${t.artist}\u0000${t.title}`, t);
+      $("#elapsed").textContent = "last.fm";
+      $("#duration").textContent = live ? "live" : t.at ? ago(t.at) : "";
+      $("#remain").textContent = "";
+      setProgress(live ? 1 : 0);
+    }
+
     function renderIdle() {
-      if (!music.playing && music.track === "idle") return;
+      if (music.mode === "idle" && music.track === "idle") return;
+      music.mode = "idle";
+      music.live = false;
       music.playing = false;
       music.track = "idle";
       $("#music").classList.remove("playing");
-      $("#musicLabel").textContent = "сейчас тишина";
+      setSource("сейчас тишина", "");
       $("#trackTitle").textContent = "тишина";
       $("#trackArtist").textContent = "ничего не играет";
       $("#trackAlbum").textContent = "—";
-      $("#trackLink").href = PROFILE.socials.spotify;
+      $("#trackLink").href = PROFILE.socials.lastfm;
       $("#cover").hidden = true;
       $("#coverPh").style.display = "";
+      $("#musicBg").style.backgroundImage = "";
       $("#elapsed").textContent = "0:00";
       $("#duration").textContent = "0:00";
       $("#remain").textContent = "";
       setProgress(0);
       document.documentElement.style.removeProperty("--accent");
       swapIn($("#meta"));
+    }
+
+    // Discord shows no Spotify: use Last.fm, and if that has nothing either, stay quiet.
+    function renderFallback() {
+      let t = lfm.track;
+      if (t && t.now && music.spotify && Date.now() - music.spotify.at < 5 * 60e3 &&
+          music.spotify.title === t.title && music.spotify.artist.split(";")[0].trim() === t.artist) {
+        // Spotify scrobbles to Last.fm, which keeps saying "now playing" for a while after we stopped.
+        t = { ...t, now: false, at: music.spotify.at };
+      }
+      if (t) renderLastfm(t); else renderIdle();
+    }
+
+    function lastfmImage(images = []) {
+      const pick = images.find((i) => i.size === "extralarge") || images[images.length - 1];
+      const url = pick && pick["#text"];
+      return url && !url.includes("2a96cbd8b46e442fc41c2b86b821562f") ? url : "";   // the grey star placeholder
+    }
+
+    async function pollLastfm() {
+      const { user, key } = PROFILE.lastfm;
+      if (!key || document.hidden) return;
+      let next = null;
+      try {
+        const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(user)}&api_key=${encodeURIComponent(key)}&format=json&limit=1`, { cache: "no-store" });
+        const json = await res.json();
+        const raw = json.recenttracks?.track;
+        const first = Array.isArray(raw) ? raw[0] : raw;
+        if (first && !json.error) next = {
+          title: first.name,
+          artist: first.artist?.["#text"] || first.artist?.name || "",
+          album: first.album?.["#text"] || "",
+          cover: lastfmImage(first.image),
+          href: first.url,
+          now: first["@attr"]?.nowplaying === "true",
+          at: first.date?.uts ? Number(first.date.uts) * 1000 : 0
+        };
+      } catch { /* offline or blocked — keep whatever we had */ return; }
+      lfm.track = next;
+      if (music.mode !== "spotify") renderFallback();
+    }
+    if (PROFILE.lastfm.key) {
+      pollLastfm();
+      lfm.timer = setInterval(pollLastfm, 15000);
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) pollLastfm(); });
     }
 
     function setProgress(p) {
@@ -974,7 +1082,8 @@
     }
 
     function tickMusic() {
-      if (!music.playing) return;
+      if (music.mode === "recent" && music.recentAt) $("#duration").textContent = ago(music.recentAt);
+      if (!music.playing || music.live) return;
       const total = Math.max(1, music.end - music.start);
       const elapsed = Math.min(Math.max(0, Date.now() - music.start), total);
       $("#elapsed").textContent = fmt(elapsed);
@@ -1003,7 +1112,7 @@
       renderCustomStatus(acts.find((a) => a.type === 4));
       renderActivity(acts.find((a) => a.type !== 4 && a.id !== "spotify:1" && a.name !== "Spotify"));
       if (d.listening_to_spotify && d.spotify) renderTrack(d.spotify);
-      else renderIdle();
+      else { if (music.mode === "spotify") music.mode = "idle"; renderFallback(); }
     }
 
     const lanyard = { ws: null, hb: 0, retry: 1500 };
@@ -1011,7 +1120,7 @@
       const id = PROFILE.discordId;
       let ws;
       try { ws = new WebSocket("wss://api.lanyard.rest/socket"); }
-      catch { setStatus("offline"); return renderIdle(); }
+      catch { setStatus("offline"); return renderFallback(); }
       lanyard.ws = ws;
       ws.addEventListener("message", (e) => {
         let msg;
@@ -1259,119 +1368,8 @@
     })();
   </script>
 
-  <!-- antigravity-style particle field around the cursor -->
-  <script>
-    (function () {
-      const canvas = document.getElementById("field");
-      const ctx = canvas.getContext("2d");
-      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const COLORS = ["#d0bcff", "#efb8c8", "#8ab4f8", "#a8e6cf", "#ffd59e", "#ffffff"];
-      let W = 0, H = 0, dpr = 1, parts = [];
-      const ptr = { x: -9999, y: -9999, sx: -9999, sy: -9999, on: 0, want: 0 };
-
-      function build() {
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
-        W = innerWidth; H = innerHeight;
-        canvas.width = W * dpr; canvas.height = H * dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        const count = Math.round(Math.min(720, Math.max(180, (W * H) / 2600)));
-        const cols = Math.max(1, Math.round(Math.sqrt(count * W / H))), rows = Math.ceil(count / cols);
-        parts = [];
-        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-          const hx = (c + Math.random()) * (W / cols), hy = (r + Math.random()) * (H / rows);
-          parts.push({
-            hx, hy, x: hx, y: hy, vx: 0, vy: 0,
-            len: 3 + Math.random() * 5, w: 1.6 + Math.random() * 1.4,
-            col: Math.random() * COLORS.length | 0,
-            seed: Math.random() * 1000, ring: Math.random(), ang: Math.random() * Math.PI * 2, glow: 0,
-            rise: .06 + Math.random() * .18
-          });
-        }
-        parts.sort((a, b) => a.col - b.col);
-      }
-
-      function frame(now) {
-        const t = now || 0;
-        ptr.on += (ptr.want - ptr.on) * .06;
-        ptr.sx += (ptr.x - ptr.sx) * .18;
-        ptr.sy += (ptr.y - ptr.sy) * .18;
-        const R = Math.max(220, Math.min(W, H) * .32);
-        const ringBase = R * .38;
-        ctx.clearRect(0, 0, W, H);
-        ctx.lineCap = "round";
-        let lastCol = -1;
-
-        for (const p of parts) {
-          // float upward forever — antigravity
-          if (!still) {
-            p.hy -= p.rise;
-            if (p.hy < -20) { p.hy += H + 40; p.y += H + 40; p.x = p.hx; }
-          }
-          const hx = p.hx + Math.sin(t * .0004 + p.seed) * 10;
-          const hy = p.hy + Math.cos(t * .00035 + p.seed * 1.3) * 10;
-
-          const dx = hx - ptr.sx, dy = hy - ptr.sy;
-          const d = Math.hypot(dx, dy) || 1;
-          let tx = hx, ty = hy, w = 0;
-          if (ptr.on > .01 && d < R) {
-            w = 1 - d / R;
-            w = w * w * (3 - 2 * w) * ptr.on;
-            const a = Math.atan2(dy, dx) + t * .0006 + p.ring * .6;
-            const rr = ringBase * (.75 + p.ring * .7) + Math.sin(t * .002 + p.seed) * 6;
-            tx = hx + (ptr.sx + Math.cos(a) * rr - hx) * w;
-            ty = hy + (ptr.sy + Math.sin(a) * rr - hy) * w;
-          }
-          p.vx = (p.vx + (tx - p.x) * .07) * .82;
-          p.vy = (p.vy + (ty - p.y) * .07) * .82;
-          p.x += p.vx; p.y += p.vy;
-          p.glow += (w - p.glow) * .12;
-
-          // point toward the cursor when close, otherwise along the motion
-          const speed = Math.hypot(p.vx, p.vy);
-          const want = p.glow > .05 ? Math.atan2(p.y - ptr.sy, p.x - ptr.sx) : speed > .4 ? Math.atan2(p.vy, p.vx) : p.ang + .004;
-          let diff = want - p.ang;
-          diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-          p.ang += diff * .14;
-
-          const len = p.len * (1 + p.glow * 1.6 + Math.min(speed * .15, 1.5));
-          const cx = Math.cos(p.ang) * len / 2, cy = Math.sin(p.ang) * len / 2;
-          if (p.col !== lastCol) { ctx.strokeStyle = COLORS[p.col]; lastCol = p.col; }
-          ctx.globalAlpha = .1 + p.glow * .9;
-          ctx.lineWidth = p.w * (1 + p.glow * .4);
-          ctx.beginPath();
-          ctx.moveTo(p.x - cx, p.y - cy);
-          ctx.lineTo(p.x + cx, p.y + cy);
-          ctx.stroke();
-        }
-        ctx.globalAlpha = 1;
-        if (!still) requestAnimationFrame(frame);
-      }
-
-      // explode outward from a point (click / easter egg)
-      window.fieldBurst = (x, y, power = 1) => {
-        for (const p of parts) {
-          const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1;
-          const f = Math.max(0, 1 - d / (320 * power)) * 16 * power;
-          p.vx += dx / d * f; p.vy += dy / d * f;
-        }
-      };
-
-      const move = (x, y) => {
-        if (ptr.want === 0 && ptr.on < .05) { ptr.sx = x; ptr.sy = y; }
-        ptr.x = x; ptr.y = y; ptr.want = 1;
-      };
-      addEventListener("pointermove", (e) => move(e.clientX, e.clientY), { passive: true });
-      addEventListener("touchmove", (e) => e.touches[0] && move(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-      addEventListener("touchend", () => { ptr.want = 0; }, { passive: true });
-      document.documentElement.addEventListener("pointerleave", () => { ptr.want = 0; });
-      addEventListener("blur", () => { ptr.want = 0; });
-      addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse") window.fieldBurst(e.clientX, e.clientY, .8); });
-
-      let rt = 0;
-      addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { build(); if (still) frame(0); }, 150); });
-      build();
-      requestAnimationFrame(frame);
-    })();
-  </script>
+  <!-- cursor particle field (WebGL2 port of the antigravity effect, see header of the file) -->
+  <script src="./cursor-field.js" defer></script>
+  <script src="./icon-swarm.js" defer></script>
 </body>
 </html>
