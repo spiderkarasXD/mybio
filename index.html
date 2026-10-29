@@ -834,7 +834,7 @@
     const mskFmt = new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" });
 
     /* ---------- Discord presence + music via Lanyard ---------- */
-    const music = { start: 0, end: 0, playing: false, live: false, mode: "idle", track: "", lastP: 0, spotify: null };
+    const music = { start: 0, end: 0, playing: false, live: false, mode: "idle", track: "", lastP: 0, discord: null };
     const lfm = { track: null, timer: 0 };
     const act = { start: 0 };
 
@@ -957,24 +957,62 @@
       $("#musicSrc").textContent = src || "";
     }
 
-    // Spotify, straight from Discord (Lanyard): real start/end, so real progress.
-    function renderTrack(sp) {
-      music.mode = "spotify";
+    // Music straight from Discord (Lanyard): real start/end, so real progress.
+    function renderPlaying(t) {
+      music.mode = "discord";
       music.live = false;
       music.playing = true;
-      music.spotify = { title: sp.song, artist: sp.artist, at: Date.now() };
-      music.start = sp.timestamps?.start || Date.now();
-      music.end = sp.timestamps?.end || music.start;
+      music.discord = { title: t.title, artist: t.artist, at: Date.now() };
+      music.start = t.start || Date.now();
+      music.end = t.end || music.start;
       $("#music").classList.add("playing");
-      setSource("now playing", "spotify");
-      setMeta(sp.track_id || sp.song, {
+      setSource("now playing", t.src);
+      setMeta(t.key, t);
+      tickMusic();
+    }
+
+    function renderSpotify(sp) {
+      renderPlaying({
+        key: sp.track_id || sp.song,
         title: sp.song,
         artist: (sp.artist || "").replace(/;\s*/g, ", "),
         album: sp.album,
         cover: sp.album_art_url,
-        href: sp.track_id ? `https://open.spotify.com/track/${sp.track_id}` : ""
+        href: sp.track_id ? `https://open.spotify.com/track/${sp.track_id}` : "",
+        start: sp.timestamps?.start,
+        end: sp.timestamps?.end,
+        src: "spotify"
       });
-      tickMusic();
+    }
+
+    // Discord image keys: "mp:external/…" goes through Discord's media proxy, plain ids are app assets.
+    function activityImage(a) {
+      const img = a.assets?.large_image;
+      if (!img) return "";
+      if (img.startsWith("mp:")) return `https://media.discordapp.net/${img.slice(3)}`;
+      if (img.startsWith("spotify:")) return `https://i.scdn.co/image/${img.slice(8)}`;
+      if (/^\d+$/.test(img) && a.application_id) return `https://cdn.discordapp.com/app-assets/${a.application_id}/${img}.png`;
+      return "";
+    }
+
+    // Any other "Listening to …" activity: TIDAL, Яндекс Музыка, Apple Music via Music Presence / PreMiD, etc.
+    function renderListening(a) {
+      const title = a.details || a.name;
+      const artist = (a.state || "").replace(/^by\s+/i, "");
+      const q = encodeURIComponent(`${title} ${artist}`.trim());
+      const href = /tidal/i.test(a.name) ? `https://tidal.com/search?q=${q}`
+        : a.url || `https://www.last.fm/search?q=${q}`;
+      renderPlaying({
+        key: `${a.name}:${title}:${artist}`,
+        title,
+        artist,
+        album: a.assets?.large_text && a.assets.large_text !== title ? a.assets.large_text : "",
+        cover: activityImage(a),
+        href,
+        start: a.timestamps?.start,
+        end: a.timestamps?.end,
+        src: a.name.toLowerCase()
+      });
     }
 
     function ago(ms) {
@@ -1027,13 +1065,14 @@
       swapIn($("#meta"));
     }
 
-    // Discord shows no Spotify: use Last.fm, and if that has nothing either, stay quiet.
+    // Discord shows no music: use Last.fm, and if that has nothing either, stay quiet.
     function renderFallback() {
       let t = lfm.track;
-      if (t && t.now && music.spotify && Date.now() - music.spotify.at < 5 * 60e3 &&
-          music.spotify.title === t.title && music.spotify.artist.split(";")[0].trim() === t.artist) {
-        // Spotify scrobbles to Last.fm, which keeps saying "now playing" for a while after we stopped.
-        t = { ...t, now: false, at: music.spotify.at };
+      const last = music.discord;
+      if (t && t.now && last && Date.now() - last.at < 5 * 60e3 &&
+          last.title === t.title && last.artist.split(",")[0].trim() === t.artist) {
+        // the player scrobbles to Last.fm, which keeps saying "now playing" for a while after we stopped
+        t = { ...t, now: false, at: last.at };
       }
       if (t) renderLastfm(t); else renderIdle();
     }
@@ -1064,7 +1103,7 @@
         };
       } catch { /* offline or blocked — keep whatever we had */ return; }
       lfm.track = next;
-      if (music.mode !== "spotify") renderFallback();
+      if (music.mode !== "discord") renderFallback();
     }
     if (PROFILE.lastfm.key) {
       pollLastfm();
@@ -1109,9 +1148,12 @@
       }
       const acts = d.activities || [];
       renderCustomStatus(acts.find((a) => a.type === 4));
-      renderActivity(acts.find((a) => a.type !== 4 && a.id !== "spotify:1" && a.name !== "Spotify"));
-      if (d.listening_to_spotify && d.spotify) renderTrack(d.spotify);
-      else { if (music.mode === "spotify") music.mode = "idle"; renderFallback(); }
+      const listening = acts.find((a) => a.type === 2 && a.id !== "spotify:1" && a.name !== "Spotify" && (a.details || a.state));
+      // music goes to the music card; the activity chip keeps games and everything else
+      renderActivity(acts.find((a) => a.type !== 4 && a.type !== 2));
+      if (d.listening_to_spotify && d.spotify) renderSpotify(d.spotify);
+      else if (listening) renderListening(listening);
+      else { if (music.mode === "discord") music.mode = "idle"; renderFallback(); }
     }
 
     const lanyard = { ws: null, hb: 0, retry: 1500 };
