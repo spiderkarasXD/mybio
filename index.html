@@ -1028,13 +1028,17 @@
       { artist: /kanye|^ye$/i, album: "late registration", cd: "vinyls/late-registration-cd.webp" },
       { artist: /kanye|^ye$/i, album: "graduation", cd: "vinyls/graduation-cd.webp" },
       { artist: /kanye|^ye$/i, album: "808s heartbreak", cd: "vinyls/808s-heartbreak-cd.webp" },
-      { artist: /kanye|^ye$/i, album: "my beautiful dark twisted fantasy", cd: "vinyls/mbdtf-cd.webp", vinyl: "vinyls/mbdtf-vinyl.webp" }
+      { artist: /kanye|^ye$/i, album: "my beautiful dark twisted fantasy", cd: "vinyls/mbdtf-cd.webp", vinyl: "vinyls/mbdtf-vinyl.webp" },
+      { artist: /tyler/i, album: "igor", cd: "vinyls/igor-cd.webp", vinyl: "vinyls/igor-vinyl.webp" },
+      // only the paper label for Flower Boy: it goes in the middle of the drawn vinyl
+      { artist: /tyler/i, album: "flower boy", cd: "vinyls/flower-boy-cd.webp", label: "vinyls/flower-boy-label.webp" }
     ];
     const albumKey = (s) => (s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
     let currentDisc = null, currentCover = "";
     function findDisc(t) {
       const album = albumKey(t.album);
-      return album && DISCS.find((d) => d.artist.test(t.artist || "") && (album === d.album || album.startsWith(d.album + " "))) || null;
+      // "Flower Boy" is also released as "Scum Fuck Flower Boy", so match the title anywhere at a word boundary
+      return album && DISCS.find((d) => d.artist.test(t.artist || "") && ` ${album} `.includes(` ${d.album} `)) || null;
     }
     // what the record shows: the real photo for this view if we have one, otherwise the cover on a drawn disc
     function paintRecord() {
@@ -1042,7 +1046,8 @@
       const real = currentDisc && currentDisc[view];
       const art = $("#recordArt");
       $(".record").classList.toggle("real", !!real);
-      const src = real || currentCover;
+      const label = !real && view === "vinyl" && currentDisc && currentDisc.label;
+      const src = real || label || currentCover;
       if (src) { if (art.getAttribute("src") !== src) art.src = src; art.hidden = false; } else art.hidden = true;
     }
 
