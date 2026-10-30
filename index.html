@@ -1031,8 +1031,7 @@
       { artist: /kanye|^ye$/i, album: "808s heartbreak", cd: "vinyls/808s-heartbreak-cd.webp" },
       { artist: /kanye|^ye$/i, album: "my beautiful dark twisted fantasy", cd: "vinyls/mbdtf-cd.webp", vinyl: "vinyls/mbdtf-vinyl.webp" },
       { artist: /tyler/i, album: "igor", cd: "vinyls/igor-cd.webp", vinyl: "vinyls/igor-vinyl.webp" },
-      // only the paper label for Flower Boy: it goes in the middle of the drawn vinyl
-      { artist: /tyler/i, album: "flower boy", cd: "vinyls/flower-boy-cd.webp", label: "vinyls/flower-boy-label.webp" }
+      { artist: /tyler/i, album: "flower boy", cd: "vinyls/flower-boy-cd.webp", vinyl: "vinyls/flower-boy-vinyl.webp" }
     ];
     const albumKey = (s) => (s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
     let currentDisc = null, currentCover = "";
