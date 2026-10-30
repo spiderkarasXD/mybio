@@ -420,6 +420,11 @@
       background: radial-gradient(circle, #141218 0 7%, rgba(255, 255, 255, .55) 7.5% 8.5%, rgba(220, 226, 236, .28) 9% 16.5%, rgba(255, 255, 255, .5) 17% 17.6%, transparent 18%);
     }
 
+    /* a real disc photo: no drawn grooves, sheen or hub — the photo has its own */
+    .record.real .record-disc { background: none; }
+    .record.real .record-art { inset: 0; width: 100%; height: 100%; border-radius: 0; }
+    .record.real::before, .record.real::after { display: none; }
+
     /* tonearm drops onto the record while it plays */
     .tonearm { position: absolute; left: 98px; top: -4px; width: 24px; height: 86px; fill: #3c3a42; stroke: #c9c5cf; transform-origin: 12px 10px; transform: rotate(-4deg); opacity: 0; transition: transform .9s var(--spring), opacity .3s var(--ease); }
     .tonearm circle, .tonearm rect { stroke: none; }
@@ -999,22 +1004,46 @@
       $("#trackAlbum").textContent = t.album || "—";
       $("#trackLink").href = t.href || PROFILE.socials.lastfm;
       swapIn($("#meta"));
+      currentDisc = findDisc(t);
+      currentCover = t.cover || "";
       if (t.cover) {
         $("#cover").src = t.cover;
         $("#cover").hidden = false;
-        $("#recordArt").src = t.cover;
-        $("#recordArt").hidden = false;
         $("#coverPh").style.display = "none";
         $("#musicBg").style.backgroundImage = `url("${t.cover}")`;
         extractAccent(t.cover);
       } else {
         $("#cover").hidden = true;
-        $("#recordArt").hidden = true;
         $("#coverPh").style.display = "";
         $("#musicBg").style.backgroundImage = "";
         document.documentElement.style.removeProperty("--accent");
       }
+      paintRecord();
       return true;
+    }
+
+    // Real disc photos for specific albums (background removed), used instead of the drawn vinyl / CD.
+    // Key: album name in lower case without punctuation; artist must match too, "graduation" alone is too common.
+    const DISCS = [
+      { artist: /kanye|^ye$/i, album: "late registration", cd: "vinyls/late-registration-cd.webp" },
+      { artist: /kanye|^ye$/i, album: "graduation", cd: "vinyls/graduation-cd.webp" },
+      { artist: /kanye|^ye$/i, album: "808s heartbreak", cd: "vinyls/808s-heartbreak-cd.webp" },
+      { artist: /kanye|^ye$/i, album: "my beautiful dark twisted fantasy", cd: "vinyls/mbdtf-cd.webp", vinyl: "vinyls/mbdtf-vinyl.webp" }
+    ];
+    const albumKey = (s) => (s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
+    let currentDisc = null, currentCover = "";
+    function findDisc(t) {
+      const album = albumKey(t.album);
+      return album && DISCS.find((d) => d.artist.test(t.artist || "") && (album === d.album || album.startsWith(d.album + " "))) || null;
+    }
+    // what the record shows: the real photo for this view if we have one, otherwise the cover on a drawn disc
+    function paintRecord() {
+      const view = $("#music").classList.contains("view-cd") ? "cd" : $("#music").classList.contains("view-vinyl") ? "vinyl" : "cover";
+      const real = currentDisc && currentDisc[view];
+      const art = $("#recordArt");
+      $(".record").classList.toggle("real", !!real);
+      const src = real || currentCover;
+      if (src) { if (art.getAttribute("src") !== src) art.src = src; art.hidden = false; } else art.hidden = true;
     }
 
     // cover / vinyl / CD — remembered per visitor
@@ -1024,6 +1053,7 @@
       music.classList.toggle("view-cd", view === "cd");
       document.querySelectorAll(".view-toggle button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
       try { localStorage.setItem("np-view", view); } catch {}
+      paintRecord();
     }
     document.querySelectorAll(".view-toggle button").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
     let savedView = "cover";
@@ -1133,7 +1163,7 @@
       $("#trackAlbum").textContent = "—";
       $("#trackLink").href = PROFILE.socials.lastfm;
       $("#cover").hidden = true;
-      $("#recordArt").hidden = true;
+      currentDisc = null; currentCover = ""; paintRecord();
       $("#coverPh").style.display = "";
       $("#musicBg").style.backgroundImage = "";
       $("#elapsed").textContent = "0:00";
