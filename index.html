@@ -354,7 +354,7 @@
 
     .track { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; margin-top: 16px; }
     .disc { position: relative; width: 124px; height: 96px; }
-    .vinyl-slot { position: absolute; left: 6px; top: 6px; width: 84px; height: 84px; transition: transform .8s var(--spring); }
+    .vinyl-slot { position: absolute; left: 6px; top: 6px; width: 84px; height: 84px; transition: transform .8s var(--spring), opacity .35s var(--ease); }
     .music.playing .vinyl-slot { transform: translateX(28px); }
     .vinyl {
       width: 100%; height: 100%;
@@ -375,9 +375,70 @@
       border-radius: var(--r-l);
       background: var(--sc-highest);
       box-shadow: 0 10px 28px rgba(0, 0, 0, .45);
-      transition: border-radius .6s var(--spring), transform .6s var(--spring);
+      transition: border-radius .6s var(--spring), transform .6s var(--spring), opacity .35s var(--ease);
     }
     .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* vinyl / CD views of the same track */
+    .record { position: absolute; left: 0; top: 0; width: 96px; height: 96px; opacity: 0; transform: scale(.82) rotate(-30deg); transition: opacity .35s var(--ease), transform .7s var(--spring); }
+    .record-disc { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; box-shadow: 0 10px 26px rgba(0, 0, 0, .55); }
+    .record-art { position: absolute; border-radius: 50%; object-fit: cover; }
+    .record::before, .record::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
+    .music.view-vinyl .record, .music.view-cd .record { opacity: 1; transform: none; }
+    .music.view-vinyl .cover, .music.view-vinyl .vinyl-slot,
+    .music.view-cd .cover, .music.view-cd .vinyl-slot { opacity: 0; transform: scale(.85); pointer-events: none; }
+    .music.playing.view-vinyl .record-disc { animation: spin 1.8s linear infinite; }   /* 33⅓ rpm */
+    .music.playing.view-cd .record-disc { animation: spin 1.1s linear infinite; }
+
+    /* vinyl: black disc with fine grooves, track gaps and a smooth run-out; the cover (or a real label) as a 1/3-size label */
+    .view-vinyl .record-disc {
+      background:
+        radial-gradient(circle closest-side, transparent 0 34%, #0b0b0c 34% 43%, rgba(255, 255, 255, .05) 43.3%, transparent 43.8%),
+        radial-gradient(circle closest-side, transparent 0 95.5%, rgba(255, 255, 255, .09) 96.5%, #0b0b0c 98%),
+        radial-gradient(circle closest-side, transparent 0 58%, #070708 58.3% 59.1%, transparent 59.5% 71%, #070708 71.3% 72.1%, transparent 72.5% 84%, #070708 84.3% 85.1%, transparent 85.5%),
+        repeating-radial-gradient(circle closest-side, #0d0d0e 0 .3%, #18181a .3% .6%);
+    }
+    .view-vinyl .record-art { inset: 33%; width: 34%; height: 34%; }
+    .view-vinyl .record::before { background: radial-gradient(circle closest-side, #0c0b0f 0 3.2%, rgba(255, 255, 255, .2) 3.6% 4%, transparent 4.4%); z-index: 2; }
+    .view-vinyl .record::after {
+      z-index: 3;
+      background: conic-gradient(from 20deg, transparent 0deg, rgba(255, 255, 255, .13) 22deg, transparent 55deg, transparent 180deg, rgba(255, 255, 255, .1) 202deg, transparent 235deg);
+      -webkit-mask: radial-gradient(circle closest-side, transparent 0 34%, #000 35%);
+      mask: radial-gradient(circle closest-side, transparent 0 34%, #000 35%);
+    }
+
+    /* CD: the cover printed over the whole face, a rainbow sheen that stays put, a clear hub */
+    .view-cd .record-disc { background: conic-gradient(from 0deg, #d9dbe2, #f5f5f8, #b9c2cc, #e8e2f2, #c9d1d9, #f3f3f6, #d9dbe2); }
+    .view-cd .record-art { inset: 0; width: 100%; height: 100%; }
+    .view-cd .record::after {
+      z-index: 3;
+      background: conic-gradient(from 210deg, rgba(255, 0, 128, .22), rgba(255, 200, 0, .22), rgba(0, 255, 170, .22), rgba(0, 160, 255, .26), rgba(170, 0, 255, .22), rgba(255, 0, 128, .22));
+      mix-blend-mode: screen;
+      opacity: .85;
+    }
+    .view-cd .record::before {
+      z-index: 4;
+      background: radial-gradient(circle, #141218 0 7%, rgba(255, 255, 255, .55) 7.5% 8.5%, rgba(220, 226, 236, .28) 9% 16.5%, rgba(255, 255, 255, .5) 17% 17.6%, transparent 18%);
+    }
+
+    /* a real disc photo: no drawn grooves, sheen or hub — the photo has its own */
+    .record.real .record-disc { background: none; }
+    .record.real .record-art { inset: 0; width: 100%; height: 100%; border-radius: 0; }
+    .record.real::before, .record.real::after { display: none; }
+
+    /* tonearm drops onto the record while it plays */
+    .tonearm { position: absolute; left: 98px; top: -4px; width: 24px; height: 86px; fill: #3c3a42; stroke: #c9c5cf; transform-origin: 12px 10px; transform: rotate(-4deg); opacity: 0; transition: transform .9s var(--spring), opacity .3s var(--ease); }
+    .tonearm circle, .tonearm rect { stroke: none; }
+    .tonearm circle { fill: #4a4752; }
+    .tonearm rect:last-child { fill: #c9c5cf; }
+    .music.view-vinyl .tonearm { opacity: 1; }
+    .music.playing.view-vinyl .tonearm { transform: rotate(20deg); }
+
+    .view-toggle { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--outline-var); border-radius: var(--full); }
+    .view-toggle button { width: 28px; height: 24px; display: grid; place-items: center; border-radius: var(--full); color: var(--outline); transition: background .2s var(--ease), color .2s var(--ease); }
+    .view-toggle button svg { width: 14px; height: 14px; fill: currentColor; }
+    .view-toggle button[aria-pressed="true"] { background: var(--secondary-c); color: var(--on-secondary-c); }
+    @media (hover: hover) and (pointer: fine) { .view-toggle button:hover { color: var(--on-surface); } }
     .cover svg { width: 40px; height: 40px; fill: var(--outline); }
     @media (hover: hover) and (pointer: fine) {
       .track:hover .cover { border-radius: 34px; transform: rotate(-4deg); }
@@ -623,10 +684,17 @@
 
     <section class="card music" id="music" style="--i:2">
       <div class="music-bg" id="musicBg"></div>
-      <div class="label"><span class="eq"><i></i><i></i><i></i><i></i></span><span id="musicLabel">now playing</span><span class="spacer"></span><span class="src" id="musicSrc"></span></div>
+      <div class="label"><span class="eq"><i></i><i></i><i></i><i></i></span><span id="musicLabel">now playing</span><span class="spacer"></span><span class="src" id="musicSrc"></span>
+        <div class="view-toggle" role="group" aria-label="вид">
+          <button type="button" data-view="cover" title="обложка" aria-label="обложка"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/></svg></button>
+          <button type="button" data-view="vinyl" title="винил" aria-label="винил"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 6.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/></svg></button>
+          <button type="button" data-view="cd" title="CD" aria-label="CD"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 0 1 7 7h-2a5 5 0 0 0-5-5V5Zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg></button>
+        </div></div>
       <a class="track" id="trackLink" href="https://www.last.fm/user/spiderkaras" target="_blank" rel="noreferrer">
         <div class="disc">
           <div class="vinyl-slot"><div class="vinyl"></div></div>
+          <div class="record" aria-hidden="true"><div class="record-disc"><img class="record-art" id="recordArt" alt="" hidden /></div></div>
+          <svg class="tonearm" viewBox="0 0 24 86" aria-hidden="true"><rect x="7" y="0" width="10" height="7" rx="2"/><circle cx="12" cy="10" r="6"/><path d="M12 10 9.5 66 4 77" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="0" y="74" width="8" height="10" rx="1.5" transform="rotate(28 4 79)"/></svg>
           <div class="cover">
             <img id="cover" alt="" hidden />
             <svg id="coverPh" viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/></svg>
@@ -937,6 +1005,8 @@
       $("#trackAlbum").textContent = t.album || "—";
       $("#trackLink").href = t.href || PROFILE.socials.lastfm;
       swapIn($("#meta"));
+      currentDisc = findDisc(t);
+      currentCover = t.cover || "";
       if (t.cover) {
         $("#cover").src = t.cover;
         $("#cover").hidden = false;
@@ -949,8 +1019,51 @@
         $("#musicBg").style.backgroundImage = "";
         document.documentElement.style.removeProperty("--accent");
       }
+      paintRecord();
       return true;
     }
+
+    // Real disc photos for specific albums (background removed), used instead of the drawn vinyl / CD.
+    // Key: album name in lower case without punctuation; artist must match too, "graduation" alone is too common.
+    const DISCS = [
+      { artist: /kanye|^ye$/i, album: "late registration", cd: "vinyls/late-registration-cd.webp" },
+      { artist: /kanye|^ye$/i, album: "graduation", cd: "vinyls/graduation-cd.webp" },
+      { artist: /kanye|^ye$/i, album: "808s heartbreak", cd: "vinyls/808s-heartbreak-cd.webp" },
+      { artist: /kanye|^ye$/i, album: "my beautiful dark twisted fantasy", cd: "vinyls/mbdtf-cd.webp", vinyl: "vinyls/mbdtf-vinyl.webp" },
+      { artist: /tyler/i, album: "igor", cd: "vinyls/igor-cd.webp", vinyl: "vinyls/igor-vinyl.webp" },
+      { artist: /tyler/i, album: "flower boy", cd: "vinyls/flower-boy-cd.webp", vinyl: "vinyls/flower-boy-vinyl.webp" }
+    ];
+    const albumKey = (s) => (s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
+    let currentDisc = null, currentCover = "";
+    function findDisc(t) {
+      const album = albumKey(t.album);
+      // "Flower Boy" is also released as "Scum Fuck Flower Boy", so match the title anywhere at a word boundary
+      return album && DISCS.find((d) => d.artist.test(t.artist || "") && ` ${album} `.includes(` ${d.album} `)) || null;
+    }
+    // what the record shows: the real photo for this view if we have one, otherwise the cover on a drawn disc
+    function paintRecord() {
+      const view = $("#music").classList.contains("view-cd") ? "cd" : $("#music").classList.contains("view-vinyl") ? "vinyl" : "cover";
+      const real = currentDisc && currentDisc[view];
+      const art = $("#recordArt");
+      $(".record").classList.toggle("real", !!real);
+      const label = !real && view === "vinyl" && currentDisc && currentDisc.label;
+      const src = real || label || currentCover;
+      if (src) { if (art.getAttribute("src") !== src) art.src = src; art.hidden = false; } else art.hidden = true;
+    }
+
+    // cover / vinyl / CD — remembered per visitor
+    function setView(view) {
+      const music = $("#music");
+      music.classList.toggle("view-vinyl", view === "vinyl");
+      music.classList.toggle("view-cd", view === "cd");
+      document.querySelectorAll(".view-toggle button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+      try { localStorage.setItem("np-view", view); } catch {}
+      paintRecord();
+    }
+    document.querySelectorAll(".view-toggle button").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
+    let savedView = "cover";
+    try { savedView = localStorage.getItem("np-view") || "cover"; } catch {}
+    setView(["cover", "vinyl", "cd"].includes(savedView) ? savedView : "cover");
 
     function setSource(label, src) {
       $("#musicLabel").textContent = label;
@@ -1055,6 +1168,7 @@
       $("#trackAlbum").textContent = "—";
       $("#trackLink").href = PROFILE.socials.lastfm;
       $("#cover").hidden = true;
+      currentDisc = null; currentCover = ""; paintRecord();
       $("#coverPh").style.display = "";
       $("#musicBg").style.backgroundImage = "";
       $("#elapsed").textContent = "0:00";
