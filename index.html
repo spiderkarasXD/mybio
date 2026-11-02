@@ -670,13 +670,28 @@
     .lyrics-retry { margin-bottom: 12px; padding: 8px 12px; border-radius: 8px; background: var(--sc-high); }
     .lyrics-status { font-size: 12px; color: var(--outline); margin-top: 12px; }
     .lyrics-status:empty { display: none; }
-    .lyrics-text.is-synced { display: grid; grid-template-rows: 1fr 2fr 1fr; height: 200px; gap: 8px; padding: 0; }
+    /* only the current line, centred */
+    .lyrics-text { text-align: center; }
+    .lyrics-text.is-synced { display: grid; place-items: center; min-height: 150px; padding: 4px 0; }
     .lyrics-text:empty { display: none; }
-    .lyric-line { min-width: 0; align-self: center; font-size: 16px; font-weight: 400; line-height: 1.4; color: var(--on-surface-var); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-    .lyric-line.is-past { opacity: .65; }
-    .lyric-line.is-active { color: var(--on-surface); font-size: clamp(20px, 2.5vw, 24px); font-weight: 500; -webkit-line-clamp: 3; animation: lyric-in .22s var(--ease); }
-    @keyframes lyric-in { from { opacity: .5; transform: translateY(6px); } }
-    @media (prefers-reduced-motion: reduce) { .lyric-line { transition: none; transform: none; } }
+    .lyric-line { max-width: 100%; font-size: clamp(22px, 2.6vw, 28px); font-weight: 650; line-height: 1.32; letter-spacing: -.01em; color: var(--on-surface); overflow-wrap: anywhere; animation: lyric-in .45s var(--ease-emph); }
+    .lyric-line.is-idle { color: var(--outline); font-weight: 400; }
+    @keyframes lyric-in { from { opacity: 0; transform: translateY(14px) scale(.97); filter: blur(4px); } }
+    /* word-by-word fill (Spicy Lyrics / Apple Music syllable syncs) */
+    .lw {
+      display: inline-block;
+      background: linear-gradient(90deg, var(--on-surface) calc(var(--p, 0%) - 6%), color-mix(in srgb, var(--on-surface) 30%, transparent) calc(var(--p, 0%) + 6%));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      transition: transform .5s var(--spring), filter .5s var(--ease);
+      animation: word-in .5s var(--ease-emph) backwards;
+      animation-delay: calc(var(--i, 0) * 26ms);
+    }
+    .lw.sung { transform: translateY(-3px); filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 45%, transparent)); }
+    .lw.bg { font-size: .7em; font-weight: 500; }
+    @keyframes word-in { from { opacity: 0; transform: translateY(.5em); filter: blur(6px); } }
+    @media (prefers-reduced-motion: reduce) { .lyric-line, .lw { transition: none; transform: none; animation: none; } }
   </style>
 </head>
 <body>

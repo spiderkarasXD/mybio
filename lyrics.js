@@ -20,7 +20,8 @@
   const status = document.getElementById('lyricsStatus');
   const credit = document.getElementById('lyricsCredit');
   let current = null, controller = null, generation = 0;
-  let lines = [], active = -2, position = null;
+  let lines = [], active = -2, position = null, positionAt = 0, fill = 0, wordEls = [];
+  const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
 
   function normalize(value) {
     return value.normalize('NFKC').toLowerCase().replace(/\s*\(?feat\.?\s.*$/i, '')
@@ -75,11 +76,16 @@
     if (body.Type === 'Line') {
       lines = (body.Content || []).map(line => ({ time: line.StartTime, value: line.Text || '' }));
     } else if (body.Type === 'Syllable') {
+      const timed = (syllables, bg) => syllables.map((s, i) => ({ text: s.Text, start: s.StartTime, end: s.EndTime,
+        join: !!s.IsPartOfWord && i < syllables.length - 1, bg }));
       lines = (body.Content || []).map(line => {
         const lead = line.Lead || {};
-        const backing = (line.Background || []).map(group => words(group.Syllables || [])).filter(Boolean);
+        const groups = (line.Background || []).map(group => group.Syllables || []).filter(g => g.length);
+        const backing = groups.map(words).filter(Boolean);
         const text = words(lead.Syllables || []) + (backing.length ? ` (${backing.join(' ')})` : '');
-        return { time: lead.StartTime ?? lead.Syllables?.[0]?.StartTime, value: text };
+        const parts = [...timed(lead.Syllables || [], false), ...groups.flatMap(g => timed(g, true))];
+        return { time: lead.StartTime ?? lead.Syllables?.[0]?.StartTime, value: text,
+          words: parts.every(p => Number.isFinite(p.start) && Number.isFinite(p.end)) ? parts : null };
       });
     } else if (body.Type === 'Static') {
       plain = (body.Lines || []).map(line => line.Text).join('\n').trim();
@@ -119,6 +125,8 @@
     return result.sort((a, b) => a.time - b.time);
   }
 
+  // Only the current line, centred. Word-level syncs light up word by word (Spicy Lyrics style);
+  // line-level ones glitch in like the nickname.
   function sync() {
     if (!lines.length) return;
     const timed = Number.isFinite(position);
@@ -127,22 +135,53 @@
     if (timed) for (let i = 0; i < lines.length && lines[i].time <= position; i++) next = i;
     if (next === active) return;
     active = next;
-    text.replaceChildren();
     text.classList.add('is-synced');
-    // Render only the neighbours: there is no scrollable surface to drag out of sync.
-    const center = Math.max(0, active);
-    let current = null;
-    for (const index of [center - 1, center, center + 1]) {
-      const el = document.createElement('div');
-      el.className = 'lyric-line';
-      el.textContent = lines[index]?.value || (index >= 0 && index < lines.length ? '♪' : '\u00a0');
-      el.classList.toggle('is-active', timed && index === active);
-      el.classList.toggle('is-past', index < center);
-      if (timed && index === active) { el.setAttribute('aria-current', 'true'); current = el; }
-      text.append(el);
+    const line = lines[active];
+    const el = document.createElement('div');
+    el.className = 'lyric-line';
+    wordEls = [];
+    if (!line || !line.value) {
+      el.classList.add('is-idle');
+      el.textContent = '♪';
+    } else if (line.words && timed) {
+      const kids = [];
+      line.words.forEach((w, i) => {
+        const span = document.createElement('span');
+        span.className = 'lw' + (w.bg ? ' bg' : '');
+        span.textContent = (w.bg && (i === 0 || !line.words[i - 1].bg) ? '(' : '') + w.text + (w.bg && !line.words[i + 1]?.bg ? ')' : '');
+        span.style?.setProperty('--i', String(i));
+        kids.push(span);
+        wordEls.push({ span, start: w.start, end: w.end, sung: false });
+        if (!w.join && i < line.words.length - 1) kids.push(' ');
+      });
+      el.replaceChildren(...kids);
+      el.setAttribute('aria-label', line.value);
+      paintWords();
+    } else {
+      el.textContent = line.value;
     }
-    // the new line glitches in like the nickname (same scramble from index.html)
-    if (current && current.textContent.trim() && typeof window.glitchText === 'function') window.glitchText(current, current.textContent, 700);
+    if (timed && active >= 0) el.setAttribute('aria-current', 'true');
+    text.replaceChildren(el);
+    if (!wordEls.length && line?.value && typeof window.glitchText === 'function') window.glitchText(el, line.value, 700);
+    if (wordEls.length && raf && !fill) fill = raf(tickWords);
+  }
+
+  // between the 200 ms position updates, keep counting from the last one so the fill moves smoothly
+  function now() { return position + (Date.now() - positionAt) / 1000; }
+  function paintWords() {
+    if (!Number.isFinite(position)) return;
+    const t = now();
+    for (const w of wordEls) {
+      const p = Math.min(1, Math.max(0, (t - w.start) / Math.max(0.05, w.end - w.start)));
+      w.span.style?.setProperty('--p', `${(p * 100).toFixed(1)}%`);
+      if (p > 0 && !w.sung) { w.sung = true; w.span.classList.add('sung'); }
+    }
+  }
+  function tickWords() {
+    fill = 0;
+    if (!wordEls.length || !Number.isFinite(position)) return;
+    paintWords();
+    fill = raf(tickWords);
   }
 
   function render(result) {
@@ -202,7 +241,7 @@
   }
 
   window.MyBioLyrics = {
-    setPosition(seconds) { position = Number.isFinite(seconds) ? seconds : null; sync(); },
+    setPosition(seconds) { position = Number.isFinite(seconds) ? seconds : null; positionAt = Date.now(); sync(); },
     setTrack(track) {
       const key = track?.title && track?.artist ? JSON.stringify([track.artist, track.title, track.album || '']) : null;
       if (key && key === current?.key) return;
