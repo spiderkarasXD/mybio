@@ -40,10 +40,29 @@ const id = '1QV6tiMFM6fSOKOGLMHYYg';
       Background: [{ Syllables: [{ Text: 'oh', StartTime: 1.6, EndTime: 1.8 }] }] },
       { Type: 'Vocal', Lead: { StartTime: 3, Syllables: [{ Text: 'Bye', StartTime: 3, EndTime: 3.4 }] } }] } }] : [500, null];
   api.setTrack({ title: 'Other', artist: 'Artist', spotifyId: 'aaaaaaaaaaaaaaaaaaaaaa', start: 0, end: 100000 });
-  api.setPosition(1.3); await flush();
+  api.setPosition(1.25); await flush();
   const line = elements.lyricsText.children[0];
   assert.equal(line.attrs['aria-label'], 'Hello world (oh)');
-  assert.deepEqual(line.children[0].children.map(k => typeof k === 'string' ? k : k.textContent), ['Hel', 'lo', ' ', 'world', ' ', '(oh)'], 'syllables of one word stay together, background in parentheses');
+  const pieces = () => line.children[0].children.filter((_, i) => i % 2 === 0).map(s => [s.className, s.textContent]);
+  const seps = () => line.children[0].children.filter((_, i) => i % 2 === 1).map(s => s.textContent);
+  let now = pieces();
+  assert.equal(now[0][0], 'u new'); assert.equal(now[0][1], 'Hel');
+  assert.equal(now[1][0], 'u gl', 'the piece being sung right now is a glitch');
+  assert.equal(now[2][0], 'u wait', 'not sung yet (no old line) = empty');
+  api.setPosition(2.9);
+  now = pieces();
+  assert.deepEqual(now.map(p => p[1]), ['Hel', 'lo', 'world', '(oh)'], 'every piece has arrived');
+  assert.ok(now.every(p => p[0].startsWith('u new')));
+  assert.deepEqual(seps(), ['', ' ', ' ', ''], 'syllables of one word stay together, words spaced');
+
+  // the next line takes over the old one in place: its one word glitches over "Hello",
+  // and the old tail ("world (oh)") glitches away because the new line is shorter
+  api.setPosition(3.05);
+  now = pieces();
+  assert.deepEqual(now.map(p => p[0]), ['u gl', 'u gl', 'u gl']);
+  api.setPosition(3.6);
+  now = pieces();
+  assert.deepEqual(now.map(p => [p[0], p[1]]), [['u new', 'Bye'], ['u gone', ''], ['u gone', '']]);
   assert.equal(creditText(), 'Текст: Spicy Lyrics · загрузил spikerko, сделал gc');
 
   // Spicy has nothing -> LRCLIB answers and is credited
@@ -55,6 +74,20 @@ const id = '1QV6tiMFM6fSOKOGLMHYYg';
   assert.ok(calls.some(([u]) => u.includes('lrclib.net')), 'falls back to LRCLIB');
   assert.equal(elements.lyricsText.children[0].attrs['aria-label'], 'L1');
   assert.equal(creditText(), 'Текст: LRCLIB');
+
+  // the user's example: "ddd ddd ddd" → "EEE EEE EEE", one word at a time as it is sung
+  const w3 = (txt, s) => ({ Type: 'Vocal', Lead: { StartTime: s, Syllables: txt.split(' ').map((x, i) => ({ Text: x, StartTime: s + i, EndTime: s + i + 0.8 })) } });
+  reply = url => url.hostname === 'api.spicylyrics.org' ? [200, { Body: { Type: 'Syllable', source: 'apple_music', id: 'dddddddddddddddddddddd',
+    Content: [w3('ddd ddd ddd', 1), w3('EEE EEE EEE', 10)] } }] : [500, null];
+  api.setTrack({ title: 'Example', artist: 'Artist', spotifyId: 'dddddddddddddddddddddd', start: 0, end: 100000 });
+  api.setPosition(9); await flush();
+  const view = () => elements.lyricsText.children[0].children[0].children.filter((_, i) => i % 2 === 0)
+    .map(s => s.className === 'u gl' ? '///' : s.textContent).join(' ');
+  assert.equal(view(), 'ddd ddd ddd');
+  api.setPosition(10.05); assert.equal(view(), '/// ddd ddd', 'step 1');
+  api.setPosition(11.05); assert.equal(view(), 'EEE /// ddd', 'step 2');
+  api.setPosition(12.05); assert.equal(view(), 'EEE EEE ///', 'step 3');
+  api.setPosition(12.5); assert.equal(view(), 'EEE EEE EEE', 'step 4');
 
   // a line that repeats the previous one keeps its text and counts x2, x3
   reply = url => url.hostname === 'api.spicylyrics.org' ? [200, { Body: { Type: 'Line', source: 'apple_music', id: 'cccccccccccccccccccccc',
@@ -72,5 +105,5 @@ const id = '1QV6tiMFM6fSOKOGLMHYYg';
   calls.length = 0;
   api.setTrack({ title: 'Fourth', artist: 'Artist', start: 0, end: 100000 }); await flush();
   assert.ok(calls.every(([u]) => !u.includes('spicylyrics')), 'no Spotify id -> no Spicy request');
-  console.log('PASS: spicy line sync, syllable sync + community credit, repeat counter, LRCLIB fallback, no-id skip');
+  console.log('PASS: spicy line sync, syllable sync + community credit, word-by-word takeover, repeat counter, LRCLIB fallback, no-id skip');
 })().catch(error => { console.error(error); process.exitCode = 1; });

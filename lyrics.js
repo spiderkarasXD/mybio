@@ -20,8 +20,9 @@
   const status = document.getElementById('lyricsStatus');
   const credit = document.getElementById('lyricsCredit');
   let current = null, controller = null, generation = 0;
-  let lines = [], active = -2, position = null, positionAt = 0, fill = 0, wordEls = [];
-  let lineEl = null, textEl = null, badgeEl = null, shown = '', repeat = 1, swap = 0;
+  let lines = [], active = -2, position = null, positionAt = 0, frame = 0;
+  let lineEl = null, textEl = null, badgeEl = null, shown = '', repeat = 1;
+  let morph = null;   // { from: [{text, join}], to: [{text, join, start, bg}], slots: [] } for the line on screen
   const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
 
   function normalize(value) {
@@ -126,11 +127,14 @@
     return result.sort((a, b) => a.time - b.time);
   }
 
-  // Only the current line, centred. A new line morphs out of the old one letter by letter (the nickname
-  // glitch); word-level syncs then fill word by word (Spicy Lyrics style). A line that repeats the
+  // Only the current line, centred. A new line takes over the old one piece by piece, in time with the
+  // singing: when a word (or syllable) of the new line starts, the piece at that place in the old line
+  // glitches and turns into it. Line-level syncs do the same letter by letter. A line that repeats the
   // previous one stays put and gets a counter: x2, x3, …
-  const same = (a, b) => a && b && a.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim() === b.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
-  const glitch = (el, value) => typeof window.glitchText === 'function' ? (window.glitchText(el, value, 700), true) : false;
+  const GLITCH = 0.16;   // seconds a piece spends as glyphs
+  const GLYPHS = '!<>-_\\/[]{}=+*^?#%&@$01ЖЯЪ▓▒░';
+  const glyphs = n => Array.from({ length: Math.max(1, n) }, () => GLYPHS[Math.random() * GLYPHS.length | 0]).join('');
+  const norm = s => (s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 
   function mount() {
     if (lineEl) return;
@@ -143,23 +147,74 @@
     badgeEl.hidden = true;
     lineEl.replaceChildren(textEl, badgeEl);
     text.replaceChildren(lineEl);
-    shown = ''; repeat = 1;
+    shown = ''; repeat = 1; morph = null;
   }
 
-  function buildWords(line) {
-    const kids = [];
-    wordEls = [];
-    line.words.forEach((w, i) => {
-      const span = document.createElement('span');
-      span.className = 'lw' + (w.bg ? ' bg' : '');
-      span.textContent = (w.bg && (i === 0 || !line.words[i - 1].bg) ? '(' : '') + w.text + (w.bg && !line.words[i + 1]?.bg ? ')' : '');
-      kids.push(span);
-      wordEls.push({ span, start: w.start, end: w.end, sung: false });
-      if (!w.join && i < line.words.length - 1) kids.push(' ');
-    });
-    textEl.replaceChildren(...kids);
-    paintWords();
-    if (raf && !fill) fill = raf(tickWords);
+  // the pieces a line is made of, each with the moment it takes over
+  function pieces(index) {
+    const line = lines[index];
+    if (!line || !line.value) return [];
+    if (line.words) {
+      return line.words.map((w, i) => ({
+        text: (w.bg && (i === 0 || !line.words[i - 1].bg) ? '(' : '') + w.text + (w.bg && !line.words[i + 1]?.bg ? ')' : ''),
+        join: w.join || i === line.words.length - 1, start: w.start, bg: w.bg
+      }));
+    }
+    // no word timings: letter by letter, left to right, over most of the time the line has
+    const chars = [...line.value];
+    const next = lines[index + 1]?.time;
+    const room = Number.isFinite(next) ? Math.max(0.4, next - line.time) : 3;
+    const step = Math.min(0.06, (room * 0.7) / chars.length);
+    return chars.map((ch, i) => ({ text: ch, join: true, start: line.time + i * step }));
+  }
+
+  // what the old line looked like, split the same way the new one is (words or letters)
+  function oldPieces(prev, byLetter) {
+    if (!prev) return [];
+    if (byLetter) return [...prev].map(ch => ({ text: ch, join: true }));
+    return prev.split(' ').filter(Boolean).map((w, i, all) => ({ text: w, join: i === all.length - 1 }));
+  }
+
+  function paint() {
+    if (!morph || !textEl) return false;
+    const t = Number.isFinite(position) ? position + (Date.now() - positionAt) / 1000 : Infinity;
+    const { from, to } = morph;
+    const total = Math.max(from.length, to.length);
+    const lastStart = to.length ? to[to.length - 1].start : -Infinity;
+    let busy = false;
+    for (let i = 0; i < total; i++) {
+      const slot = morph.slots[i] || (morph.slots[i] = { span: null, sep: null, state: '' });
+      const next = to[i], old = from[i];
+      let state, value, join;
+      if (next) {
+        if (t >= next.start + GLITCH) { state = 'new'; value = next.text; join = next.join; }
+        else if (t >= next.start) { state = 'gl'; value = glyphs(next.text.length); join = next.join; busy = true; }
+        else { state = old ? 'old' : 'wait'; value = old ? old.text : ''; join = old ? old.join : next.join; busy = true; }
+      } else {
+        // the old line was longer: its tail glitches away once the new line has fully started
+        if (t >= lastStart + GLITCH * 2) { state = 'gone'; value = ''; join = true; }
+        else if (t >= lastStart) { state = 'gl'; value = glyphs(old.text.length); join = old.join; busy = true; }
+        else { state = 'old'; value = old.text; join = old.join; busy = true; }
+      }
+      if (!slot.span) {
+        slot.span = document.createElement('span');
+        slot.sep = document.createElement('span');
+        textEl.append(slot.span);
+        textEl.append(slot.sep);
+      }
+      if (slot.state !== state || state === 'gl') {
+        slot.span.textContent = value;
+        slot.span.className = `u ${state}` + (next?.bg && state === 'new' ? ' bg' : '');
+        slot.state = state;
+      }
+      slot.sep.textContent = join || state === 'gone' || state === 'wait' ? '' : ' ';
+    }
+    return busy;
+  }
+
+  function loop() {
+    frame = 0;
+    if (paint() && raf) frame = raf(loop);
   }
 
   function sync() {
@@ -168,63 +223,44 @@
     status.textContent = timed ? '' : 'Нет позиции воспроизведения';
     let next = -1;
     if (timed) for (let i = 0; i < lines.length && lines[i].time <= position; i++) next = i;
-    if (next === active) return;
+    if (next === active) { if (morph && !frame) loop(); return; }
     active = next;
     text.classList.add('is-synced');
     mount();
-    clearTimeout(swap);
-    wordEls = [];
     const line = lines[active];
     const value = line?.value || '';
     if (timed && active >= 0) lineEl.setAttribute('aria-current', 'true');
     lineEl.setAttribute('aria-label', value || '♪');
     lineEl.classList.toggle('is-idle', !value);
 
-    if (value && same(value, shown)) {
-      // the same line again: keep the text, count the repeat, restart the word fill
+    if (value && norm(value) === norm(shown)) {
+      // the same line again: keep it on screen and count the repeat
       repeat++;
       badgeEl.textContent = `x${repeat}`;
       badgeEl.hidden = false;
       badgeEl.classList.remove('pop'); void badgeEl.offsetWidth; badgeEl.classList.add('pop');
-      if (line.words && timed) buildWords(line);
       return;
     }
     repeat = 1;
     badgeEl.hidden = true;
-    const target = value || '♪';
-    textEl.textContent = shown || (textEl.textContent || '');
-    shown = value;
-    if (glitch(textEl, target)) {
-      // the morph rewrites the text; once it lands, swap in the timed words
-      if (line?.words && timed) {
-        const mine = active;
-        swap = setTimeout(() => { if (active === mine) buildWords(line); }, 760);
-      }
-    } else if (line?.words && timed) buildWords(line);
-    else textEl.textContent = target;
-  }
-
-  // between the 200 ms position updates, keep counting from the last one so the fill moves smoothly
-  function now() { return position + (Date.now() - positionAt) / 1000; }
-  function paintWords() {
-    if (!Number.isFinite(position)) return;
-    const t = now();
-    for (const w of wordEls) {
-      const p = Math.min(1, Math.max(0, (t - w.start) / Math.max(0.05, w.end - w.start)));
-      w.span.style?.setProperty('--p', `${(p * 100).toFixed(1)}%`);
-      if (p > 0 && !w.sung) { w.sung = true; w.span.classList.add('sung'); }
+    if (!value) {
+      morph = null;
+      textEl.textContent = '♪';
+      shown = '';
+      return;
     }
-  }
-  function tickWords() {
-    fill = 0;
-    if (!wordEls.length || !Number.isFinite(position)) return;
-    paintWords();
-    fill = raf(tickWords);
+    const to = pieces(active);
+    const from = oldPieces(shown, !line.words);
+    morph = { from, to, slots: [] };
+    textEl.replaceChildren();
+    shown = value;
+    if (!timed) { morph = null; textEl.textContent = value; return; }
+    if (!frame) loop();
   }
 
   function render(result) {
     setCredit(result.credit);
-    lineEl = null; clearTimeout(swap);
+    lineEl = null; morph = null;
     lines = result.lines || [];
     active = -2;
     text.replaceChildren();
@@ -291,7 +327,7 @@
       panel.setAttribute('aria-busy', 'false');
       text.textContent = '';
       status.textContent = '';
-      lines = []; active = -2; position = null; lineEl = null; clearTimeout(swap);
+      lines = []; active = -2; position = null; lineEl = null; morph = null;
       text.classList.remove('is-synced');
       retry.hidden = true;
       if (current) void load();
