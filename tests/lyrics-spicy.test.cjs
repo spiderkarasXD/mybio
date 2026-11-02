@@ -29,19 +29,21 @@ const id = '1QV6tiMFM6fSOKOGLMHYYg';
   api.setPosition(2.2); await flush();
   assert.equal(calls[0][0], `https://api.spicylyrics.org/v1/lyrics/${id}`);
   assert.equal(calls[0][1], 'Bearer sl_pk_test');
-  assert.deepEqual(elements.lyricsText.children.map(el => el.textContent), ['One', 'Two', 'Three']);
+  assert.deepEqual(elements.lyricsText.children.map(el => el.attrs['aria-label']), ['Two'], 'only the current line');
   assert.equal(creditText(), 'Текст: Apple Music', 'commercial source: provider only, no empty credits');
 
   // word-level community sync: words joined, background in parentheses, uploader + maker credited
   calls.length = 0;
   reply = url => url.hostname === 'api.spicylyrics.org' ? [200, { Body: { Type: 'Syllable', source: 'spicy_lyrics', id: 'aaaaaaaaaaaaaaaaaaaaaa',
     UploadAttribution: { Uploader: { username: 'spikerko', url: 'https://spicylyrics.org/uid/1' }, Maker: { username: 'gc', url: 'https://spicylyrics.org/uid/2' } },
-    Content: [{ Type: 'Vocal', Lead: { StartTime: 1, Syllables: [{ Text: 'Hel', IsPartOfWord: true, StartTime: 1 }, { Text: 'lo', StartTime: 1.2 }, { Text: 'world', StartTime: 1.5 }] },
-      Background: [{ Syllables: [{ Text: 'oh', StartTime: 1.6 }] }] },
-      { Type: 'Vocal', Lead: { StartTime: 3, Syllables: [{ Text: 'Bye', StartTime: 3 }] } }] } }] : [500, null];
+    Content: [{ Type: 'Vocal', Lead: { StartTime: 1, Syllables: [{ Text: 'Hel', IsPartOfWord: true, StartTime: 1, EndTime: 1.2 }, { Text: 'lo', StartTime: 1.2, EndTime: 1.5 }, { Text: 'world', StartTime: 1.5, EndTime: 1.9 }] },
+      Background: [{ Syllables: [{ Text: 'oh', StartTime: 1.6, EndTime: 1.8 }] }] },
+      { Type: 'Vocal', Lead: { StartTime: 3, Syllables: [{ Text: 'Bye', StartTime: 3, EndTime: 3.4 }] } }] } }] : [500, null];
   api.setTrack({ title: 'Other', artist: 'Artist', spotifyId: 'aaaaaaaaaaaaaaaaaaaaaa', start: 0, end: 100000 });
   api.setPosition(1.3); await flush();
-  assert.equal(elements.lyricsText.children[1].textContent, 'Hello world (oh)');
+  const line = elements.lyricsText.children[0];
+  assert.equal(line.attrs['aria-label'], 'Hello world (oh)');
+  assert.deepEqual(line.children[0].children.map(k => typeof k === 'string' ? k : k.textContent), ['Hel', 'lo', ' ', 'world', ' ', '(oh)'], 'syllables of one word stay together, background in parentheses');
   assert.equal(creditText(), 'Текст: Spicy Lyrics · загрузил spikerko, сделал gc');
 
   // Spicy has nothing -> LRCLIB answers and is credited
@@ -51,12 +53,24 @@ const id = '1QV6tiMFM6fSOKOGLMHYYg';
   api.setTrack({ title: 'Third', artist: 'Artist', spotifyId: 'bbbbbbbbbbbbbbbbbbbbbb', start: 0, end: 100000 });
   api.setPosition(1.5); await flush();
   assert.ok(calls.some(([u]) => u.includes('lrclib.net')), 'falls back to LRCLIB');
-  assert.equal(elements.lyricsText.children[1].textContent, 'L1');
+  assert.equal(elements.lyricsText.children[0].attrs['aria-label'], 'L1');
   assert.equal(creditText(), 'Текст: LRCLIB');
+
+  // a line that repeats the previous one keeps its text and counts x2, x3
+  reply = url => url.hostname === 'api.spicylyrics.org' ? [200, { Body: { Type: 'Line', source: 'apple_music', id: 'cccccccccccccccccccccc',
+    Content: [{ Type: 'Vocal', Text: 'Na na na', StartTime: 1 }, { Type: 'Vocal', Text: 'Na, na, na!', StartTime: 2 }, { Type: 'Vocal', Text: 'na na na', StartTime: 3 }, { Type: 'Vocal', Text: 'Hey', StartTime: 4 }] } }] : [500, null];
+  api.setTrack({ title: 'Rep', artist: 'Artist', spotifyId: 'cccccccccccccccccccccc', start: 0, end: 100000 });
+  api.setPosition(1.1); await flush();
+  const badge = () => elements.lyricsText.children[0].children[1];
+  assert.equal(badge().hidden, true, 'first time: no counter');
+  api.setPosition(2.1); assert.equal(badge().hidden, false); assert.equal(badge().textContent, 'x2');
+  api.setPosition(3.1); assert.equal(badge().textContent, 'x3', 'punctuation and case do not matter');
+  api.setPosition(4.1); assert.equal(badge().hidden, true, 'a new line resets the counter');
+  assert.equal(elements.lyricsText.children[0].attrs['aria-label'], 'Hey');
 
   // TIDAL & co (no Spotify id): Spicy is not asked at all
   calls.length = 0;
   api.setTrack({ title: 'Fourth', artist: 'Artist', start: 0, end: 100000 }); await flush();
   assert.ok(calls.every(([u]) => !u.includes('spicylyrics')), 'no Spotify id -> no Spicy request');
-  console.log('PASS: spicy line sync, syllable sync + community credit, LRCLIB fallback, no-id skip');
+  console.log('PASS: spicy line sync, syllable sync + community credit, repeat counter, LRCLIB fallback, no-id skip');
 })().catch(error => { console.error(error); process.exitCode = 1; });
