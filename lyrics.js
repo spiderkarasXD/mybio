@@ -1,7 +1,10 @@
 /* Lyrics for the current track: Spicy Lyrics first (Spotify tracks, needs a key), then LRCLIB. */
 (() => {
-  // Spicy Lyrics publishable key (sl_pk_…) with https://spiderkaras.fun in its origin allowlist.
-  // Get one at https://developers.spicylyrics.org/dashboard/applications. Empty = LRCLIB only.
+  // Spicy Lyrics, either way works (empty both = LRCLIB only):
+  //  • SPICY_PROXY — URL of workers/lyrics-proxy.js deployed on Cloudflare (keeps the secret key off the site);
+  //  • SPICY_KEY   — a publishable key (sl_pk_…) with https://spiderkaras.fun in its origin allowlist.
+  // Never put a secret key (sl_sk_…) here: the site is public, and the API refuses it from browsers anyway.
+  const SPICY_PROXY = '';
   const SPICY_KEY = '';
   const LRCLIB = { name: 'LRCLIB', url: 'https://lrclib.net' };
   const PROVIDERS = {
@@ -57,10 +60,12 @@
 
   // Spicy Lyrics: one endpoint by Spotify track id, the best sync it has (community > Apple Music / Spotify).
   async function spicy(track, signal) {
-    if (!SPICY_KEY || !/^[0-9A-Za-z]{22}$/.test(track.spotifyId || '')) return null;
+    if ((!SPICY_PROXY && !SPICY_KEY) || !/^[0-9A-Za-z]{22}$/.test(track.spotifyId || '')) return null;
     let res;
     try {
-      res = await fetch(`https://api.spicylyrics.org/v1/lyrics/${track.spotifyId}`, { signal, headers: { Authorization: `Bearer ${SPICY_KEY}` } });
+      res = SPICY_PROXY
+        ? await fetch(`${SPICY_PROXY.replace(/\/$/, '')}/v1/lyrics/${track.spotifyId}`, { signal })
+        : await fetch(`https://api.spicylyrics.org/v1/lyrics/${track.spotifyId}`, { signal, headers: { Authorization: `Bearer ${SPICY_KEY}` } });
     } catch (error) { if (signal.aborted) throw error; return null; }
     if (!res.ok) return null;   // not found, rate limited, key problems: LRCLIB takes over
     const body = (await res.json())?.Body;
