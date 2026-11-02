@@ -5,9 +5,44 @@
   const retry = document.getElementById('lyricsRetry');
   const cache = new Map();
   const status = document.getElementById('lyricsStatus');
-  const follow = document.getElementById('lyricsFollow');
   let current = null, controller = null, generation = 0;
-  let lines = [], active = -2, position = null, manual = false;
+  let lines = [], active = -2, position = null;
+
+  function normalize(value) {
+    return value.normalize('NFKC').toLowerCase().replace(/\s*\(?feat\.?\s.*$/i, '')
+      .replace(/\s*[-–(]\s*(?:\d{4}\s*)?remaster(?:ed)?[^)]*\)?/ig, '')
+      .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  }
+
+  async function lookup(track, signal) {
+    const request = async (path, params) => {
+      const res = await fetch(`https://lrclib.net/api/${path}?${new URLSearchParams(params)}`, { signal });
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error('Lyrics request failed');
+      return res.json();
+    };
+    const base = { artist_name: track.artist, track_name: track.title };
+    let found = await request('get', track.album ? { ...base, album_name: track.album } : base);
+    const usable = item => item && (item.instrumental || item.plainLyrics?.trim() || item.syncedLyrics?.trim());
+    if (found?.syncedLyrics?.trim() || found?.instrumental) return found;
+    if (track.album) {
+      const withoutAlbum = await request('get', base);
+      if (withoutAlbum?.syncedLyrics?.trim() || withoutAlbum?.instrumental) return withoutAlbum;
+      if (!usable(found)) found = withoutAlbum;
+    }
+    // Search alternate releases; reject unrelated titles and artists rather than guessing.
+    const primaryArtist = track.artist.split(/,|;| & /)[0].trim();
+    let candidates;
+    try { candidates = await request('search', { q: `${primaryArtist} ${normalize(track.title)}` }); }
+    catch (error) { if (usable(found) && !signal.aborted) return found; throw error; }
+    const duration = track.end > track.start ? (track.end - track.start) / 1000 : null;
+    const matches = (Array.isArray(candidates) ? candidates : []).filter(item =>
+      usable(item) && normalize(item.trackName || '') === normalize(track.title) &&
+      normalize(item.artistName || '') === normalize(primaryArtist) &&
+      (!duration || !Number.isFinite(item.duration) || Math.abs(item.duration - duration) <= 4));
+    matches.sort((a, b) => Number(!!b.syncedLyrics?.trim()) - Number(!!a.syncedLyrics?.trim()));
+    return matches[0] || found;
+  }
 
   function parseLrc(source) {
     const result = [];
@@ -23,21 +58,23 @@
   function sync() {
     if (!lines.length) return;
     const timed = Number.isFinite(position);
-    status.textContent = timed ? 'Синхронизация по строкам' : 'Без синхронизации · нет позиции трека';
+    status.textContent = timed ? '' : 'Нет позиции воспроизведения';
     let next = -1;
     if (timed) for (let i = 0; i < lines.length && lines[i].time <= position; i++) next = i;
     if (next === active) return;
     active = next;
-    [...text.children].forEach((el, i) => {
-      el.classList.toggle('is-active', i === active);
-      el.classList.toggle('is-past', timed && i < active);
-      if (i === active) el.setAttribute('aria-current', 'true');
-      else el.removeAttribute('aria-current');
-    });
-    if (!manual && panel.open && active >= 0) {
-      const el = text.children[active];
-      text.scrollTo({ top: el.offsetTop - text.offsetTop - text.clientHeight / 2 + el.clientHeight / 2,
-        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    text.replaceChildren();
+    text.classList.add('is-synced');
+    // Render only the neighbours: there is no scrollable surface to drag out of sync.
+    const center = Math.max(0, active);
+    for (const index of [center - 1, center, center + 1]) {
+      const el = document.createElement('div');
+      el.className = 'lyric-line';
+      el.textContent = lines[index]?.value || (index >= 0 && index < lines.length ? '♪' : '\u00a0');
+      el.classList.toggle('is-active', timed && index === active);
+      el.classList.toggle('is-past', index < center);
+      if (timed && index === active) el.setAttribute('aria-current', 'true');
+      text.append(el);
     }
   }
 
@@ -45,13 +82,8 @@
     lines = result.lines || [];
     active = -2;
     text.replaceChildren();
+    text.classList.remove('is-synced');
     if (lines.length) {
-      for (const line of lines) {
-        const el = document.createElement('div');
-        el.className = 'lyric-line';
-        el.textContent = line.value || '♪';
-        text.append(el);
-      }
       sync();
     } else {
       text.textContent = result.message;
@@ -69,17 +101,13 @@
     retry.hidden = true;
     text.textContent = 'Загрузка текста…';
     panel.setAttribute('aria-busy', 'true');
-    const timeout = setTimeout(() => request.abort(), 10000);
+    const timeout = setTimeout(() => request.abort(), 18000);
     try {
       let result = cache.get(track.key);
       if (!result) {
-        const params = new URLSearchParams({ artist_name: track.artist, track_name: track.title });
-        if (track.album) params.set('album_name', track.album);
-        const response = await fetch(`https://lrclib.net/api/get?${params}`, { signal: request.signal });
-        if (response.status === 404) result = { message: 'Текст не найден' };
+        const data = await lookup(track, request.signal);
+        if (!data) result = { message: 'Текст не найден' };
         else {
-          if (!response.ok) throw new Error('Lyrics request failed');
-          const data = await response.json();
           const plain = typeof data.plainLyrics === 'string' ? data.plainLyrics.trim() : '';
           const synced = typeof data.syncedLyrics === 'string' ? parseLrc(data.syncedLyrics) : [];
           result = data.instrumental ? { message: 'Инструментальная композиция' }
@@ -88,7 +116,7 @@
         }
         if (version !== generation) return;
         if (cache.size >= 20) cache.delete(cache.keys().next().value);
-        cache.set(track.key, result);
+        if (result.lines || result.static || data?.instrumental) cache.set(track.key, result);
       }
       if (version === generation) render(result);
     } catch {
@@ -113,17 +141,12 @@
       panel.setAttribute('aria-busy', 'false');
       text.textContent = '';
       status.textContent = '';
-      lines = []; active = -2; position = null; manual = false;
-      follow.hidden = true;
-      text.scrollTop = 0;
+      lines = []; active = -2; position = null;
+      text.classList.remove('is-synced');
       retry.hidden = true;
       if (current) void load();
     }
   };
   panel.addEventListener('toggle', () => { if (panel.open) void load(); });
   retry.addEventListener('click', () => void load());
-  for (const event of ['wheel', 'touchstart', 'keydown']) text.addEventListener(event, () => {
-    manual = true; follow.hidden = !lines.length;
-  }, { passive: true });
-  follow.addEventListener('click', () => { manual = false; follow.hidden = true; active = -2; sync(); });
 })();
