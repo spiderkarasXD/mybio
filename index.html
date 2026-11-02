@@ -685,12 +685,12 @@
       background-clip: text;
       color: transparent;
       transition: transform .5s var(--spring), filter .5s var(--ease);
-      animation: word-in .5s var(--ease-emph) backwards;
-      animation-delay: calc(var(--i, 0) * 26ms);
     }
+    /* a repeated line keeps its text and counts: x2, x3, … */
+    .rep { display: inline-block; margin-left: .35em; font-family: var(--mono); font-size: .5em; font-weight: 700; color: var(--accent); vertical-align: super; }
+    .rep.pop { animation: pop .5s var(--spring); }
     .lw.sung { transform: translateY(-3px); filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 45%, transparent)); }
     .lw.bg { font-size: .7em; font-weight: 500; }
-    @keyframes word-in { from { opacity: 0; transform: translateY(.5em); filter: blur(6px); } }
     @media (prefers-reduced-motion: reduce) { .lyric-line, .lw { transition: none; transform: none; animation: none; } }
   </style>
 </head>

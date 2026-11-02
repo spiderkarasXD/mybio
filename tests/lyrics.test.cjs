@@ -23,11 +23,11 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
   api.setTrack({title:'Song',artist:'Artist',album:'Deluxe',start:1000,end:121000});
   api.setPosition(2.5); await flush();
   assert.equal(calls.length,3,'album miss falls back to get without album, then search');
-  assert.deepEqual(elements.lyricsText.children.map(el=>el.textContent),['Second'],'only the current line');
+  assert.deepEqual(elements.lyricsText.children.map(el=>el.attrs['aria-label']),['Second'],'only the current line');
   assert.equal(elements.lyricsText.children[0].attrs['aria-current'],'true');
   api.setPosition(3.5);
-  assert.deepEqual(elements.lyricsText.children.map(el=>el.textContent),['Third'],'line advances automatically');
-  api.setPosition(1.5); assert.equal(elements.lyricsText.children[0].textContent,'First','seek backwards');
+  assert.deepEqual(elements.lyricsText.children.map(el=>el.attrs['aria-label']),['Third'],'line advances automatically');
+  api.setPosition(1.5); assert.equal(elements.lyricsText.children[0].attrs['aria-label'],'First','seek backwards');
   reply=()=>[200,[{trackName:'Unrelated',artistName:'Artist',syncedLyrics:'[00:00]Wrong'}]];
   // Exact get returns no lyrics, search result must be rejected.
   const searchReply=reply;

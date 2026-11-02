@@ -21,6 +21,7 @@
   const credit = document.getElementById('lyricsCredit');
   let current = null, controller = null, generation = 0;
   let lines = [], active = -2, position = null, positionAt = 0, fill = 0, wordEls = [];
+  let lineEl = null, textEl = null, badgeEl = null, shown = '', repeat = 1, swap = 0;
   const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
 
   function normalize(value) {
@@ -125,8 +126,42 @@
     return result.sort((a, b) => a.time - b.time);
   }
 
-  // Only the current line, centred. Word-level syncs light up word by word (Spicy Lyrics style);
-  // line-level ones glitch in like the nickname.
+  // Only the current line, centred. A new line morphs out of the old one letter by letter (the nickname
+  // glitch); word-level syncs then fill word by word (Spicy Lyrics style). A line that repeats the
+  // previous one stays put and gets a counter: x2, x3, …
+  const same = (a, b) => a && b && a.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim() === b.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const glitch = (el, value) => typeof window.glitchText === 'function' ? (window.glitchText(el, value, 700), true) : false;
+
+  function mount() {
+    if (lineEl) return;
+    lineEl = document.createElement('div');
+    lineEl.className = 'lyric-line';
+    textEl = document.createElement('span');
+    textEl.className = 'lt';
+    badgeEl = document.createElement('span');
+    badgeEl.className = 'rep';
+    badgeEl.hidden = true;
+    lineEl.replaceChildren(textEl, badgeEl);
+    text.replaceChildren(lineEl);
+    shown = ''; repeat = 1;
+  }
+
+  function buildWords(line) {
+    const kids = [];
+    wordEls = [];
+    line.words.forEach((w, i) => {
+      const span = document.createElement('span');
+      span.className = 'lw' + (w.bg ? ' bg' : '');
+      span.textContent = (w.bg && (i === 0 || !line.words[i - 1].bg) ? '(' : '') + w.text + (w.bg && !line.words[i + 1]?.bg ? ')' : '');
+      kids.push(span);
+      wordEls.push({ span, start: w.start, end: w.end, sung: false });
+      if (!w.join && i < line.words.length - 1) kids.push(' ');
+    });
+    textEl.replaceChildren(...kids);
+    paintWords();
+    if (raf && !fill) fill = raf(tickWords);
+  }
+
   function sync() {
     if (!lines.length) return;
     const timed = Number.isFinite(position);
@@ -136,34 +171,37 @@
     if (next === active) return;
     active = next;
     text.classList.add('is-synced');
-    const line = lines[active];
-    const el = document.createElement('div');
-    el.className = 'lyric-line';
+    mount();
+    clearTimeout(swap);
     wordEls = [];
-    if (!line || !line.value) {
-      el.classList.add('is-idle');
-      el.textContent = '♪';
-    } else if (line.words && timed) {
-      const kids = [];
-      line.words.forEach((w, i) => {
-        const span = document.createElement('span');
-        span.className = 'lw' + (w.bg ? ' bg' : '');
-        span.textContent = (w.bg && (i === 0 || !line.words[i - 1].bg) ? '(' : '') + w.text + (w.bg && !line.words[i + 1]?.bg ? ')' : '');
-        span.style?.setProperty('--i', String(i));
-        kids.push(span);
-        wordEls.push({ span, start: w.start, end: w.end, sung: false });
-        if (!w.join && i < line.words.length - 1) kids.push(' ');
-      });
-      el.replaceChildren(...kids);
-      el.setAttribute('aria-label', line.value);
-      paintWords();
-    } else {
-      el.textContent = line.value;
+    const line = lines[active];
+    const value = line?.value || '';
+    if (timed && active >= 0) lineEl.setAttribute('aria-current', 'true');
+    lineEl.setAttribute('aria-label', value || '♪');
+    lineEl.classList.toggle('is-idle', !value);
+
+    if (value && same(value, shown)) {
+      // the same line again: keep the text, count the repeat, restart the word fill
+      repeat++;
+      badgeEl.textContent = `x${repeat}`;
+      badgeEl.hidden = false;
+      badgeEl.classList.remove('pop'); void badgeEl.offsetWidth; badgeEl.classList.add('pop');
+      if (line.words && timed) buildWords(line);
+      return;
     }
-    if (timed && active >= 0) el.setAttribute('aria-current', 'true');
-    text.replaceChildren(el);
-    if (!wordEls.length && line?.value && typeof window.glitchText === 'function') window.glitchText(el, line.value, 700);
-    if (wordEls.length && raf && !fill) fill = raf(tickWords);
+    repeat = 1;
+    badgeEl.hidden = true;
+    const target = value || '♪';
+    textEl.textContent = shown || (textEl.textContent || '');
+    shown = value;
+    if (glitch(textEl, target)) {
+      // the morph rewrites the text; once it lands, swap in the timed words
+      if (line?.words && timed) {
+        const mine = active;
+        swap = setTimeout(() => { if (active === mine) buildWords(line); }, 760);
+      }
+    } else if (line?.words && timed) buildWords(line);
+    else textEl.textContent = target;
   }
 
   // between the 200 ms position updates, keep counting from the last one so the fill moves smoothly
@@ -186,6 +224,7 @@
 
   function render(result) {
     setCredit(result.credit);
+    lineEl = null; clearTimeout(swap);
     lines = result.lines || [];
     active = -2;
     text.replaceChildren();
@@ -252,7 +291,7 @@
       panel.setAttribute('aria-busy', 'false');
       text.textContent = '';
       status.textContent = '';
-      lines = []; active = -2; position = null;
+      lines = []; active = -2; position = null; lineEl = null; clearTimeout(swap);
       text.classList.remove('is-synced');
       retry.hidden = true;
       if (current) void load();
