@@ -677,21 +677,18 @@
     .lyric-line { max-width: 100%; font-size: clamp(22px, 2.6vw, 28px); font-weight: 650; line-height: 1.32; letter-spacing: -.01em; color: var(--on-surface); overflow-wrap: anywhere; animation: lyric-in .45s var(--ease-emph); }
     .lyric-line.is-idle { color: var(--outline); font-weight: 400; }
     @keyframes lyric-in { from { opacity: 0; transform: translateY(14px) scale(.97); filter: blur(4px); } }
-    /* word-by-word fill (Spicy Lyrics / Apple Music syllable syncs) */
-    .lw {
-      display: inline-block;
-      background: linear-gradient(90deg, var(--on-surface) calc(var(--p, 0%) - 6%), color-mix(in srgb, var(--on-surface) 30%, transparent) calc(var(--p, 0%) + 6%));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      transition: transform .5s var(--spring), filter .5s var(--ease);
-    }
+    /* the new line takes over the old one piece by piece: old (dim) → glitch → new */
+    .lyric-line .lt { white-space: pre-wrap; }
+    .u { transition: opacity .25s var(--ease), color .25s var(--ease); }
+    .u.old { opacity: .35; }
+    .u.gl { font-family: var(--mono); color: var(--tertiary); text-shadow: 2px 0 rgba(255, 46, 136, .75), -2px 0 rgba(0, 229, 255, .75); }
+    .u.new { display: inline-block; animation: piece-in .35s var(--spring); }
+    .u.bg { font-size: .7em; font-weight: 500; }
+    @keyframes piece-in { from { transform: translateY(-.18em) scale(1.06); text-shadow: 0 0 14px var(--accent); } }
     /* a repeated line keeps its text and counts: x2, x3, … */
     .rep { display: inline-block; margin-left: .35em; font-family: var(--mono); font-size: .5em; font-weight: 700; color: var(--accent); vertical-align: super; }
     .rep.pop { animation: pop .5s var(--spring); }
-    .lw.sung { transform: translateY(-3px); filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 45%, transparent)); }
-    .lw.bg { font-size: .7em; font-weight: 500; }
-    @media (prefers-reduced-motion: reduce) { .lyric-line, .lw { transition: none; transform: none; animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .lyric-line, .u { transition: none; transform: none; animation: none; } }
   </style>
 </head>
 <body>
