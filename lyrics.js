@@ -4,7 +4,7 @@
   //  • SPICY_PROXY — URL of workers/lyrics-proxy.js deployed on Cloudflare (keeps the secret key off the site);
   //  • SPICY_KEY   — a publishable key (sl_pk_…) with https://spiderkaras.fun in its origin allowlist.
   // Never put a secret key (sl_sk_…) here: the site is public, and the API refuses it from browsers anyway.
-  const SPICY_PROXY = '';
+  const SPICY_PROXY = 'https://spicy-lyrics.spiderkaras.workers.dev';
   const SPICY_KEY = '';
   const LRCLIB = { name: 'LRCLIB', url: 'https://lrclib.net' };
   const PROVIDERS = {

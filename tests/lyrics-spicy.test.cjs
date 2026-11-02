@@ -15,7 +15,7 @@ let reply;
 const context = { window: {}, document: { getElementById: id => elements[id], createElement: element },
   URLSearchParams, AbortController, setTimeout, clearTimeout,
   fetch: async (url, init) => { calls.push([url, init?.headers?.Authorization]); const [status, data] = reply(new URL(url)); return { status, ok: status === 200, json: async () => data }; } };
-const source = readFileSync(join(__dirname, '../lyrics.js'), 'utf8').replace("const SPICY_KEY = '';", "const SPICY_KEY = 'sl_pk_test';");
+const source = readFileSync(join(__dirname, '../lyrics.js'), 'utf8').replace(/const SPICY_PROXY = '[^']*';/, "const SPICY_PROXY = '';").replace("const SPICY_KEY = '';", "const SPICY_KEY = 'sl_pk_test';");
 vm.runInNewContext(source, context);
 const api = context.window.MyBioLyrics;
 const flush = () => new Promise(resolve => setImmediate(resolve));
