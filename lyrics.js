@@ -67,15 +67,18 @@
     text.classList.add('is-synced');
     // Render only the neighbours: there is no scrollable surface to drag out of sync.
     const center = Math.max(0, active);
+    let current = null;
     for (const index of [center - 1, center, center + 1]) {
       const el = document.createElement('div');
       el.className = 'lyric-line';
       el.textContent = lines[index]?.value || (index >= 0 && index < lines.length ? '♪' : '\u00a0');
       el.classList.toggle('is-active', timed && index === active);
       el.classList.toggle('is-past', index < center);
-      if (timed && index === active) el.setAttribute('aria-current', 'true');
+      if (timed && index === active) { el.setAttribute('aria-current', 'true'); current = el; }
       text.append(el);
     }
+    // the new line glitches in like the nickname (same scramble from index.html)
+    if (current && current.textContent.trim() && typeof window.glitchText === 'function') window.glitchText(current, current.textContent, 700);
   }
 
   function render(result) {
