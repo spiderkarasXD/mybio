@@ -747,7 +747,7 @@
         <div class="lyrics-status" id="lyricsStatus"></div>
         <div class="lyrics-text" id="lyricsText" role="region" aria-label="Текст текущей песни"></div>
         <button class="lyrics-retry" id="lyricsRetry" type="button" hidden>Повторить</button>
-        <div class="lyrics-credit">Текст: <a href="https://lrclib.net" target="_blank" rel="noreferrer">LRCLIB</a></div>
+        <div class="lyrics-credit" id="lyricsCredit">Текст: <a href="https://lrclib.net" target="_blank" rel="noreferrer">LRCLIB</a></div>
       </details>
     </section>
 
@@ -1127,6 +1127,7 @@
         album: sp.album,
         cover: sp.album_art_url,
         href: sp.track_id ? `https://open.spotify.com/track/${sp.track_id}` : "",
+        spotifyId: sp.track_id,
         start: sp.timestamps?.start,
         end: sp.timestamps?.end,
         src: "spotify"

@@ -1,10 +1,24 @@
-/* Lyrics for the current track, supplied by LRCLIB. */
+/* Lyrics for the current track: Spicy Lyrics first (Spotify tracks, needs a key), then LRCLIB. */
 (() => {
+  // Spicy Lyrics, either way works (empty both = LRCLIB only):
+  //  • SPICY_PROXY — URL of workers/lyrics-proxy.js deployed on Cloudflare (keeps the secret key off the site);
+  //  • SPICY_KEY   — a publishable key (sl_pk_…) with https://spiderkaras.fun in its origin allowlist.
+  // Never put a secret key (sl_sk_…) here: the site is public, and the API refuses it from browsers anyway.
+  const SPICY_PROXY = 'https://spicy-lyrics.spiderkaras.workers.dev';
+  const SPICY_KEY = '';
+  const LRCLIB = { name: 'LRCLIB', url: 'https://lrclib.net' };
+  const PROVIDERS = {
+    spicy_lyrics: { name: 'Spicy Lyrics', url: 'https://spicylyrics.org' },
+    apple_music: { name: 'Apple Music', url: 'https://music.apple.com' },
+    spotify: { name: 'Spotify', url: 'https://open.spotify.com' },
+    unknown: { name: 'Spicy Lyrics', url: 'https://spicylyrics.org' }
+  };
   const panel = document.getElementById('lyrics');
   const text = document.getElementById('lyricsText');
   const retry = document.getElementById('lyricsRetry');
   const cache = new Map();
   const status = document.getElementById('lyricsStatus');
+  const credit = document.getElementById('lyricsCredit');
   let current = null, controller = null, generation = 0;
   let lines = [], active = -2, position = null;
 
@@ -42,6 +56,56 @@
       (!duration || !Number.isFinite(item.duration) || Math.abs(item.duration - duration) <= 4));
     matches.sort((a, b) => Number(!!b.syncedLyrics?.trim()) - Number(!!a.syncedLyrics?.trim()));
     return matches[0] || found;
+  }
+
+  // Spicy Lyrics: one endpoint by Spotify track id, the best sync it has (community > Apple Music / Spotify).
+  async function spicy(track, signal) {
+    if ((!SPICY_PROXY && !SPICY_KEY) || !/^[0-9A-Za-z]{22}$/.test(track.spotifyId || '')) return null;
+    let res;
+    try {
+      res = SPICY_PROXY
+        ? await fetch(`${SPICY_PROXY.replace(/\/$/, '')}/v1/lyrics/${track.spotifyId}`, { signal })
+        : await fetch(`https://api.spicylyrics.org/v1/lyrics/${track.spotifyId}`, { signal, headers: { Authorization: `Bearer ${SPICY_KEY}` } });
+    } catch (error) { if (signal.aborted) throw error; return null; }
+    if (!res.ok) return null;   // not found, rate limited, key problems: LRCLIB takes over
+    const body = (await res.json())?.Body;
+    if (!body) return null;
+    const words = syllables => syllables.map((s, i) => s.Text + (s.IsPartOfWord || i === syllables.length - 1 ? '' : ' ')).join('').trim();
+    let lines = [], plain = '';
+    if (body.Type === 'Line') {
+      lines = (body.Content || []).map(line => ({ time: line.StartTime, value: line.Text || '' }));
+    } else if (body.Type === 'Syllable') {
+      lines = (body.Content || []).map(line => {
+        const lead = line.Lead || {};
+        const backing = (line.Background || []).map(group => words(group.Syllables || [])).filter(Boolean);
+        const text = words(lead.Syllables || []) + (backing.length ? ` (${backing.join(' ')})` : '');
+        return { time: lead.StartTime ?? lead.Syllables?.[0]?.StartTime, value: text };
+      });
+    } else if (body.Type === 'Static') {
+      plain = (body.Lines || []).map(line => line.Text).join('\n').trim();
+    }
+    lines = lines.filter(line => Number.isFinite(line.time)).sort((a, b) => a.time - b.time);
+    if (!lines.length && !plain) return null;
+    const who = body.source === 'spicy_lyrics' ? body.UploadAttribution : null;
+    const by = person => person && person.username ? { name: person.username, url: person.url } : null;
+    return {
+      credit: { provider: PROVIDERS[body.source] || PROVIDERS.unknown, uploader: by(who?.Uploader), maker: by(who?.Maker) },
+      ...(lines.length ? { lines } : { message: plain, static: true })
+    };
+  }
+
+  // Provider always; uploader and maker only when a community sync answered (Spicy Lyrics attribution rule).
+  function setCredit(info = { provider: LRCLIB }) {
+    if (!credit) return;
+    const link = ({ name, url }) => {
+      const a = document.createElement('a');
+      a.href = url; a.target = '_blank'; a.rel = 'noreferrer'; a.textContent = name;
+      return a;
+    };
+    const parts = ['Текст: ', link(info.provider)];
+    if (info.uploader) parts.push(' · загрузил ', link(info.uploader));
+    if (info.maker) parts.push(', сделал ', link(info.maker));
+    credit.replaceChildren(...parts);
   }
 
   function parseLrc(source) {
@@ -82,6 +146,7 @@
   }
 
   function render(result) {
+    setCredit(result.credit);
     lines = result.lines || [];
     active = -2;
     text.replaceChildren();
@@ -106,7 +171,11 @@
     panel.setAttribute('aria-busy', 'true');
     const timeout = setTimeout(() => request.abort(), 18000);
     try {
-      let result = cache.get(track.key);
+      let result = cache.get(track.key) || await spicy(track, request.signal);
+      if (result && !cache.has(track.key) && version === generation) {
+        if (cache.size >= 20) cache.delete(cache.keys().next().value);
+        cache.set(track.key, result);
+      }
       if (!result) {
         const data = await lookup(track, request.signal);
         if (!data) result = { message: 'Текст не найден' };
